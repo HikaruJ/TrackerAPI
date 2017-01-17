@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
 use App\Service;
+use App\User;
 use Carbon\Carbon;
 use \Cache;
 use GuzzleHttp\Client;
@@ -231,7 +231,7 @@ class IDigimaController extends Controller
 
             $user->save();
         }
-        else if ($token.expire_date < Carbon::now()) 
+        else if ($token->expiry_date < Carbon::now()) 
         {
             Log::debug('Updating Access Token', $logParams);
 

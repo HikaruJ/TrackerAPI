@@ -154,7 +154,7 @@ class Office365Controller extends Controller
             "grant_type" => "authorization_code",
             "code" => $code,
             "redirect_uri" => "https://dev.motivo.jp/api/office365/authenticate/",
-            "scope" => "mail.read",
+            "scope" => "'openid', 'profile', 'offline_access', 'https://outlook.office.com/mail.read'",
             "client_id" => "37ff3cfe-950c-4ed8-bac5-23b598ba43d8",
             "client_secret" => "ngb41oHnnaMQdvoYHv9Cic0"
         ];
@@ -228,7 +228,7 @@ class Office365Controller extends Controller
 
         catch(\Exception $e)
         {
-            $errorMessage = $e->getResponse()->getMessage();
+            $errorMessage = $e->getMessage();
             $innerError = $e->getResponse()->getBody()->getContents();
             Log::error('Failed to get user profile', ['errorMessage' => $errorMessage, 'innerError' => $innerError, 'methodId' => $methodId]);
             return null;
@@ -330,7 +330,7 @@ class Office365Controller extends Controller
             "@odata.type" => "#Microsoft.OutlookServices.PushSubscription",
             "Resource" => "https://outlook.office.com/api/v2.0/me/messages",
             "NotificationURL" => "https://dev.motivo.jp/api/office365/subscription",  
-            "ChangeType" => "Created, Updated, Deleted",
+            "ChangeType" => "Created, Updated",
             "SubscriptionExpirationDateTime" => "2017-04-23T22:46:13.8805047Z",//Carbon::now()->addWeeks(4),
             "ClientState" => Uuid::generate()->string
         );

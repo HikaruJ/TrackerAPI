@@ -52,7 +52,20 @@ class Office365Controller extends Controller
         {
             $code = $request->input('code');
          
-            $client = new \GuzzleHttp\Client();
+            // $client = new \GuzzleHttp\Client();
+
+            $client = new \GuzzleHttp\Client(
+                array(
+                        "defaults" => array(
+                                "allow_redirects" => true, "exceptions" => true,
+                                "decode_content" => true,
+                        ),
+                        'cookies' => true,
+                        'verify' => false,
+                        'proxy' => "localhost:8888",
+                )
+            );
+
             $accessToken = $this->getAccessToken($client, $code, $methodId);
             if (is_null($accessToken) || empty($accessToken))
             {
@@ -169,7 +182,7 @@ class Office365Controller extends Controller
 
             $scopes = "openid+offline_access+profile+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fmail.send+https%3A%2F%2Foutlook.office.com%2Fmail.send.shared+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fcontacts.readwrite+https%3A%2F%2Foutlook.office.com%2Ftasks.readwrite";
 
-            $body = "grant_type=authorization_code&code=" . $code . "&scope=" . $scopes . "&client_id=37ff3cfe-950c-4ed8-bac5-23b598ba43d8&client_secret=ngb41oHnnaMQdvoYHv9Cic0&redirect_uri=https://94fa34ca.ngrok.io/api/office365/authenticate/";
+            $body = "grant_type=authorization_code&code=" . $code . "&scope=" . $scopes . "&client_id=37ff3cfe-950c-4ed8-bac5-23b598ba43d8&client_secret=ngb41oHnnaMQdvoYHv9Cic0&redirect_uri=https://dev.motivo.jp/api/office365/authenticate/";
 
             $accessTokenResponse = $client->post($accessTokenURI, [
                 'headers' => [
@@ -335,11 +348,11 @@ class Office365Controller extends Controller
             "Resource" => "https://outlook.office.com/api/v2.0/me/messages",
             "NotificationURL" => "https://dev.motivo.jp/api/office365/subscription",  
             "ChangeType" => "Created, Updated",
-            "SubscriptionExpirationDateTime" => "2017-04-23T22:46:13.8805047Z",//Carbon::now()->addWeeks(4),
+            "SubscriptionExpirationDateTime" => "2017-04-23T22:46:13.8805047Z",
             "ClientState" => Uuid::generate()->string
         );
 
-        $subscriptionDataJSON = json_encode($subscriptionData);
+        $subscriptionDataJSON = json_encode($subscriptionData,JSON_UNESCAPED_SLASHES);
 
         try
         {
@@ -348,7 +361,7 @@ class Office365Controller extends Controller
                     'Content-Type' => 'application/json', 
                     'Authorization' => "Bearer {$accessToken}"
                 ],
-                'json' => $subscriptionDataJSON,
+                'body' => $subscriptionDataJSON
             ]);
         }
 

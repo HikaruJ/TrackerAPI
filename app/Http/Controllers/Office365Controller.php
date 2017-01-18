@@ -228,20 +228,20 @@ class Office365Controller extends Controller
         catch(\Exception $e)
         {
             $errorMessage = $e->getResponse()->getBody()->getContents();
-            Log::error('Failed to get user profile', ['errorMessage' => $errorMessage, 'methodId' => $logParams['methodId']]);
+            Log::error('Failed to get user profile', ['errorMessage' => $errorMessage, 'methodId' => $methodId]);
             return null;
         }
 
         if (is_null($userProfileResponse) || empty($userProfileResponse))
         {
-            Log::error('Failed to get user profile, due to empty response', ['methodId' => $logParams['methodId']]);
+            Log::error('Failed to get user profile, due to empty response', ['methodId' => $methodId]);
             return null;
         }
 
         $data = $userProfileResponse->getBody()->getContents();
         if (is_null($data) || empty($data))
         {
-            Log::error('Failed to get user profile, due to empty body response', ['methodId' => $logParams['methodId']]);
+            Log::error('Failed to get user profile, due to empty body response', ['methodId' => $methodId]);
             return null;
         }
 

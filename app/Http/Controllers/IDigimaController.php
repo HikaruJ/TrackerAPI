@@ -18,43 +18,7 @@ class IDigimaController extends Controller
     /* Public Functions */
 
     /**
-    * Authenticate credentials and create an Access Token
-    *
-    * @param  Request  $request
-    * @return Response
-    */
-    public function authenticate(Request $request) 
-    {
-        $accessToken = $request->getAccessToken($request);
-        return $accessToken;
-    }
-
-    public function createMessage(Request $request) 
-    {
-        $token = $request->token;
-        $message = $request->message;
-
-        $client = new Client([
-            'base_uri' => 'https://www.i-digima.com',
-            'timeout'  => 3.0,
-            'headers' => array('Content-Type' => 'application/json', 'Authorization' => 'key='.$token),
-        ]);
-
-        $url = "/api/message";
-
-        try {
-            $client->request('POST', $url, [
-                'json' => json_encode($message), 'verify' => false
-            ]);
-        }
-        catch (GuzzleHttp\Exception\ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = $response->getBody()->getContents();
-        }
-    }
-
-    /**
-    * Check whether the IDigima token for the user is valid
+    * Check Whether the IDigima Token for the User is Valid
     *
     * @param  Request  $request
     * @return Response
@@ -92,7 +56,7 @@ class IDigimaController extends Controller
     }
 
     /**
-    * Save I-Digima token to the Tokens table
+    * Save I-Digima Token to the Tokens Table
     *
     * @param  Request  $request
     * @return Response
@@ -127,18 +91,13 @@ class IDigimaController extends Controller
 
         return view('idigima.successAuth');
     }
-
-    public function updateMessage() 
-    {
-
-    }
     //////////////////////////
 
     //////////////////////////
     /* Private Functions */
 
     /**
-    * Get parameters from URL
+    * Get Parameters from URL
     *
     * @param  $fullURL - URL Address
     * @return Response - URL Parameters

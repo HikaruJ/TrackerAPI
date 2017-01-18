@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Service;
 use App\Setting;
 use App\User;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +13,7 @@ use Webpatser\Uuid\Uuid;
 
 class Office365Controller extends Controller
 {
-    /* How to debug client with Fiddler */
+    /* How to Debug Client with Fiddler */
     // $client = new \GuzzleHttp\Client(
     //     array(
     //             "defaults" => array(
@@ -21,7 +22,6 @@ class Office365Controller extends Controller
     //             ),
     //             'cookies' => true,
     //             'verify' => false,
-    //             // For testing with Fiddler
     //             'proxy' => "localhost:8888",
     //     )
     // );
@@ -30,7 +30,7 @@ class Office365Controller extends Controller
     /* Public Functions */
 
     /**
-    * Authenticate credentials and create an Access Token
+    * Authenticate Credentials and Create an Access Token
     *
     * @param  Request  $request
     * @return Response
@@ -51,7 +51,9 @@ class Office365Controller extends Controller
         else
         {
             $code = $request->input('code');
-            $accessToken = $this->getAccessToken($code, $methodId);
+         
+            $client = new \GuzzleHttp\Client();
+            $accessToken = $this->getAccessToken($client, $code, $methodId);
             if (is_null($accessToken) || empty($accessToken))
             {
                 return view('office365.failureAuth');
@@ -81,7 +83,7 @@ class Office365Controller extends Controller
                 return view('office365.failureAuth');
             }
 
-            $subscribeResult = $this->subscribeToMailEvents($accessToken, $logParams, $userId);
+            $subscribeResult = $this->subscribeToMailEvents($accessToken, $client, $logParams, $userId);
             if ($subscribeResult == false) 
             {
                 Log::error('Failed to subscribe to Office365 subscription', $logParams);
@@ -93,7 +95,7 @@ class Office365Controller extends Controller
     }
 
     /**
-    * Subscribe to Mail events from the user
+    * Subscribe to Mail Events From the User
     *
     * @param  Request  $request
     * @return Response
@@ -126,64 +128,83 @@ class Office365Controller extends Controller
     /**
     * Get Access Token from Microsoft Outlook API
     *
-    * @param  $code
-    * @param  $methodId
-    * @return Result result - Access Token
+    * @param  $client - HTTP Client
+    * @param  $code - Code Recieved by Microsoft for Getting an Access Token
+    * @param  $methodId - Tracking ID Created by the Main Method
+    * @return Result result - Access Token from Microsoft
     */
-    private function getAccessToken($code, $methodId)
+    private function getAccessToken($client, $code, $methodId)
     {
         Log::debug('Initializing Office365 getAccessToken method', ['code' => $code, 'methodId' => $methodId]);
 
-        /* Provider credentials for Microsoft Graph/Outlook API */
-        $provider = new \League\OAuth2\Client\Provider\GenericProvider([
-            'clientId'                => '37ff3cfe-950c-4ed8-bac5-23b598ba43d8',
-            'clientSecret'            => 'ngb41oHnnaMQdvoYHv9Cic0', /**  */
-            'redirectUri'             => 'https://dev.motivo.jp/api/office365/authenticate/',
-            'urlAuthorize'            => 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-            'urlAccessToken'          => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-            'urlResourceOwnerDetails' => '',
-            'scopes'                  => 'openid mail.send mail.read'
-        ]);
+        // /* Provider credentials for Microsoft Graph/Outlook API */
+        // $provider = new \League\OAuth2\Client\Provider\GenericProvider([
+        //     'clientId'                => '37ff3cfe-950c-4ed8-bac5-23b598ba43d8',
+        //     'clientSecret'            => 'ngb41oHnnaMQdvoYHv9Cic0', /**  */
+        //     'redirectUri'             => 'https://dev.motivo.jp/api/office365/authenticate/',
+        //     'urlAuthorize'            => 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+        //     'urlAccessToken'          => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+        //     'urlResourceOwnerDetails' => '',
+        //     'scopes'                  => 'openid mail.send mail.read'
+        // ]);
 
-        $accessToken = null;
+        $accessTokenURI = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+
+        $accessTokenRequest = [
+            "grant_type" => "authorization_code",
+            "code" => $code,
+            "redirect_uri" => "https://94fa34ca.ngrok.io/api/office365/authenticate/",
+            "scope" => "mail.read",
+            "client_id" => "37ff3cfe-950c-4ed8-bac5-23b598ba43d8",
+            "client_secret" => "ngb41oHnnaMQdvoYHv9Cic0"
+        ];
+        
+        $accessTokenResponse = null;
 
         try
         {
-            $accessToken = $provider->getAccessToken('authorization_code', [
-                'code' => $code
+            // $accessToken = $provider->getAccessToken('authorization_code', [
+            //     'code' => $code
+            // ]);
+
+            $accessTokenResponse = $client->post($accessTokenURI, [
+                'headers' => [
+                    'Content-Type' => 'application/x-www-form-urlencoded'
+                ],
+                'body' => http_build_query($accessTokenRequest),
             ]);
         }
 
-        catch (RequestException $e)
-        {
-            $errorMessage = $e->getMessage();
-            Log::error('Failed to get access Token.', ['code' => $code, 'error' => $errorMessage, 'methodId' => $methodId, 'userId' => $userId]);
-            return null;
-        }
-        catch (GuzzleHttp\Exception\ClientException $e) 
-        {
-            $response = $e->getResponse();
-            $responseBodyAsString = $response->getBody()->getContents();
-
-            Log::error('Failed to get access Token.', ['code' => $code, 'error' => $errorMessage, 'methodId' => $methodId, 'userId' => $userId]);
-            return null;
-        }
         catch (\Exception $e) 
         {
-            $errorMessage = $e->getMessage();
-            Log::error('Failed to get access Token.', ['code' => $code, 'error' => $errorMessage, 'methodId' => $methodId, 'userId' => $userId]);
+            $errorMessage = $e->getResponse()->getBody()->getContents();
+            Log::error('Failed to get access token.', ['code' => $code, 'error' => $errorMessage, 'methodId' => $methodId]);
             return null;
         }
 
-        return $accessToken->getToken();
+        $data = $accessTokenResponse->getBody()->getContents();
+        if (is_null($data) || empty($data))
+        {
+            Log::error('Failed to get access token, due to empty body response', ['methodId' => $logParams['methodId']]);
+            return null;
+        }
+
+        $accessToken = json_decode($data);
+        if (is_null($accessToken) || empty($accessToken))
+        {
+            Log::error('Failed to serialize access token data', ['methodId' => $logParams['methodId']]);
+            return null;
+        }
+
+        return $accessToken->access_token;
     }
 
     /**
     * Get User Profile Data using Received Access Token
     *
-    * @param  $accessToken
-    * @param  $methodId
-    * @return Result result - User Profile data
+    * @param  $accessToken - Access Token from Microsoft
+    * @param  $methodId - Tracking ID Created by the Main Method
+    * @return Result result - User Profile Data (In Case of an Error, null will Return)
     */
     private function getUserProfile($accessToken, $methodId)
     {
@@ -206,22 +227,22 @@ class Office365Controller extends Controller
 
         catch(\Exception $e)
         {
-            $errorMessage = $e->getMessage();
+            $errorMessage = $e->getResponse()->getBody()->getContents();
             Log::error('Failed to get user profile', ['errorMessage' => $errorMessage, 'methodId' => $logParams['methodId']]);
-            return false;
+            return null;
         }
 
         if (is_null($userProfileResponse) || empty($userProfileResponse))
         {
             Log::error('Failed to get user profile, due to empty response', ['methodId' => $logParams['methodId']]);
-            return false;
+            return null;
         }
 
         $data = $userProfileResponse->getBody()->getContents();
         if (is_null($data) || empty($data))
         {
-            Log::error('Failed to get user profile, to empty body response', ['methodId' => $logParams['methodId']]);
-            return false;
+            Log::error('Failed to get user profile, due to empty body response', ['methodId' => $logParams['methodId']]);
+            return null;
         }
 
         $userProfile = json_decode($data);
@@ -231,10 +252,10 @@ class Office365Controller extends Controller
     /**
     * Save Access Token to the Database
     *
-    * @param  $accessToken
-    * @param  $logParams
-    * @param  $userId
-    * @return boolean result
+    * @param  $accessToken - Access Token from Microsoft
+    * @param  $logParams - Logging Parameters
+    * @param  $userId - Current Logged-In User Id
+    * @return boolean result - Was Token Saved Successfully
     */
     private function saveAccessToken($accessToken, $logParams, $userId) 
     {
@@ -293,12 +314,12 @@ class Office365Controller extends Controller
     /**
     * Subscribe to Receive Notifications from Outlook365 for the User
     *
-    * @param  $accessToken
-    * @param  $logParams
-    * @param  $userId
-    * @return boolean result
+    * @param  $accessToken - Access Token from Microsoft
+    * @param  $logParams - Logging Parameters
+    * @param  $userId - Current Logged-In User Id
+    * @return Result result - Subscription Response (In Case of an Error, null will Return)
     */
-    private function subscribeToMailEvents($accessToken, $logParams, $userId) 
+    private function subscribeToMailEvents($accessToken, $client, $logParams, $userId) 
     {
         Log::debug('Initializing Office365 subscribeToMailEvents method', $logParams);    
 
@@ -306,46 +327,31 @@ class Office365Controller extends Controller
         $subscriptionData = array
         (
             "@odata.type" => "#Microsoft.OutlookServices.PushSubscription",
-            "Resource" => "me/messages",
-            "NotificationURL" => "https://dev.motivo.jp/api/office365/subscription",
-            "ChangeType" => "Created",
+            "Resource" => "https://outlook.office.com/api/v2.0/me/messages",
+            "NotificationURL" => "https://dev.motivo.jp/api/office365/subscription",  
+            "ChangeType" => "Created, Updated, Deleted",
+            "SubscriptionExpirationDateTime" => "2017-04-23T22:46:13.8805047Z",//Carbon::now()->addWeeks(4),
             "ClientState" => Uuid::generate()->string
         );
 
         $subscriptionDataJSON = json_encode($subscriptionData);
 
-        $client = new \GuzzleHttp\Client();
-
         try
         {
-            $subscriptionResponse = $client->post($subscriptionURI, $subscriptionDataJSON, [
-                'headers' => array
-                (
+            $subscriptionResponse = $client->post($subscriptionURI, [
+                'headers' => [
                     'Content-Type' => 'application/json', 
                     'Authorization' => "Bearer {$accessToken}"
-                )
+                ],
+                'json' => $subscriptionDataJSON,
             ]);
         }
 
-        catch (RequestException $e)
-        {
-            $errorMessage = $e->getMessage();
-            Log::error('Failed to subscribe to Office365 subscription', ['errorMessage' => $errorMessage, 'methodId' => $logParams['methodId'], 'response' => $response, 'responseBodyAsString' => $responseBodyAsString, 'userId' => $userId]);
-            return false;
-        }
-        catch (GuzzleHttp\Exception\ClientException $e) 
-        {
-            $response = $e->getResponse();
-            $responseBodyAsString = $response->getBody()->getContents();
-
-            Log::error('Failed to subscribe to Office365 subscription', ['methodId' => $logParams['methodId'], 'response' => $response, 'responseBodyAsString' => $responseBodyAsString, 'userId' => $userId]);
-            return false;
-        }
         catch(\Exception $e)
         {
-            $errorMessage = $e->getMessage();
+            $errorMessage = $e->getResponse()->getBody()->getContents();
             Log::error('Failed to subscribe to Office365 subscription', ['errorMessage' => $errorMessage, 'methodId' => $logParams['methodId'], 'userId' => $userId]);
-            return false;
+            return null;
         }
 
         return subscriptionResponse;

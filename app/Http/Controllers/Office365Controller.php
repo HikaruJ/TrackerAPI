@@ -59,7 +59,7 @@ class Office365Controller extends Controller
                 return view('office365.failureAuth');
             }
 
-            $userProfile = $this->getUserProfile($accessToken, $methodId);
+            $userProfile = $this->getUserProfile($accessToken, $client, $methodId);
             if (is_null($userProfile) || empty($userProfile))
             {
                 return view('office365.failureAuth');
@@ -128,7 +128,7 @@ class Office365Controller extends Controller
     /**
     * Get Access Token from Microsoft Outlook API
     *
-    * @param  $client - HTTP Client
+    * @param  $client - HTTP Client Instance
     * @param  $code - Code Recieved by Microsoft for Getting an Access Token
     * @param  $methodId - Tracking ID Created by the Main Method
     * @return Result result - Access Token from Microsoft
@@ -177,8 +177,9 @@ class Office365Controller extends Controller
 
         catch (\Exception $e) 
         {
-            $errorMessage = $e->getResponse()->getBody()->getContents();
-            Log::error('Failed to get access token.', ['code' => $code, 'error' => $errorMessage, 'methodId' => $methodId]);
+            $errorMessage = $e->getMessage();
+            $innerError = $e->getResponse()->getBody()->getContents();
+            Log::error('Failed to get access token.', ['code' => $code, 'error' => $errorMessage, 'innerError' => $innerError, 'methodId' => $methodId]);
             return null;
         }
 
@@ -203,14 +204,14 @@ class Office365Controller extends Controller
     * Get User Profile Data using Received Access Token
     *
     * @param  $accessToken - Access Token from Microsoft
+    * @param  $client - HTTP Client Instance
     * @param  $methodId - Tracking ID Created by the Main Method
     * @return Result result - User Profile Data (In Case of an Error, null will Return)
     */
-    private function getUserProfile($accessToken, $methodId)
+    private function getUserProfile($accessToken, $client, $methodId)
     {
         Log::debug('Initializing Office365 getUserProfile method', ['methodId' => $methodId]);
 
-        $client = new \GuzzleHttp\Client();
         $userProfileURI = 'https://outlook.office.com/api/v2.0/me';
 
         $userProfileResponse = null;
@@ -227,8 +228,9 @@ class Office365Controller extends Controller
 
         catch(\Exception $e)
         {
-            $errorMessage = $e->getResponse()->getBody()->getContents();
-            Log::error('Failed to get user profile', ['errorMessage' => $errorMessage, 'methodId' => $methodId]);
+            $errorMessage = $e->getResponse()->getMessage();
+            $innerError = $e->getResponse()->getBody()->getContents();
+            Log::error('Failed to get user profile', ['errorMessage' => $errorMessage, 'innerError' => $innerError, 'methodId' => $methodId]);
             return null;
         }
 
@@ -316,10 +318,9 @@ class Office365Controller extends Controller
     *
     * @param  $accessToken - Access Token from Microsoft
     * @param  $logParams - Logging Parameters
-    * @param  $userId - Current Logged-In User Id
     * @return Result result - Subscription Response (In Case of an Error, null will Return)
     */
-    private function subscribeToMailEvents($accessToken, $client, $logParams, $userId) 
+    private function subscribeToMailEvents($accessToken, $client, $logParams) 
     {
         Log::debug('Initializing Office365 subscribeToMailEvents method', $logParams);    
 
@@ -349,8 +350,9 @@ class Office365Controller extends Controller
 
         catch(\Exception $e)
         {
-            $errorMessage = $e->getResponse()->getBody()->getContents();
-            Log::error('Failed to subscribe to Office365 subscription', ['errorMessage' => $errorMessage, 'methodId' => $logParams['methodId'], 'userId' => $userId]);
+            $errorMessage = $e->getMessage();
+            $innerError = $e->getResponse()->getBody()->getContents();
+            Log::error('Failed to subscribe to Office365 subscription', ['errorMessage' => $errorMessage, 'innerError' => $innerError, 'methodId' => $logParams['methodId'], 'userId' => $logParams['userId']]);
             return null;
         }
 

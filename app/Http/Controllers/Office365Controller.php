@@ -150,16 +150,16 @@ class Office365Controller extends Controller
 
         $accessTokenURI = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
 
-        $accessTokenScopes = array("openid", "profile", "offline_access", "https://outlook.office.com/mail.read");
-
         $accessTokenRequest = [
             "grant_type" => "authorization_code",
             "code" => $code,
             "redirect_uri" => "https://dev.motivo.jp/api/office365/authenticate/",
-            "scope" => implode(" ", $scopes),
+            "scope" => "openid+offline_access+profile+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fmail.send+https%3A%2F%2Foutlook.office.com%2Fmail.send.shared+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fcontacts.readwrite+https%3A%2F%2Foutlook.office.com%2Ftasks.readwrite",
             "client_id" => "37ff3cfe-950c-4ed8-bac5-23b598ba43d8",
             "client_secret" => "ngb41oHnnaMQdvoYHv9Cic0"
         ];
+        
+
         
         $accessTokenResponse = null;
 

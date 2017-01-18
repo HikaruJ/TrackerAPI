@@ -153,13 +153,11 @@ class Office365Controller extends Controller
         $accessTokenRequest = [
             "grant_type" => "authorization_code",
             "code" => $code,
-            "redirect_uri" => "https://dev.motivo.jp/api/office365/authenticate/",
-            "scope" => "openid+offline_access+profile+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fmail.send+https%3A%2F%2Foutlook.office.com%2Fmail.send.shared+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fcontacts.readwrite+https%3A%2F%2Foutlook.office.com%2Ftasks.readwrite",
+            "scope" => "openid+offline_access+profile+mail.read",
             "client_id" => "37ff3cfe-950c-4ed8-bac5-23b598ba43d8",
-            "client_secret" => "ngb41oHnnaMQdvoYHv9Cic0"
+            "client_secret" => "ngb41oHnnaMQdvoYHv9Cic0",
+            "redirect_uri" => "https://94fa34ca.ngrok.io/api/office365/authenticate/"
         ];
-        
-
         
         $accessTokenResponse = null;
 
@@ -169,11 +167,15 @@ class Office365Controller extends Controller
             //     'code' => $code
             // ]);
 
+            $scopes = "openid+offline_access+profile+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fmail.send+https%3A%2F%2Foutlook.office.com%2Fmail.send.shared+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fcontacts.readwrite+https%3A%2F%2Foutlook.office.com%2Ftasks.readwrite";
+
+            $body = "grant_type=authorization_code&code=" . $code . "&scope=" . $scopes . "&client_id=37ff3cfe-950c-4ed8-bac5-23b598ba43d8&client_secret=ngb41oHnnaMQdvoYHv9Cic0&redirect_uri=https://94fa34ca.ngrok.io/api/office365/authenticate/";
+
             $accessTokenResponse = $client->post($accessTokenURI, [
                 'headers' => [
                     'Content-Type' => 'application/x-www-form-urlencoded'
                 ],
-                'body' => http_build_query($accessTokenRequest),
+                'body' => $body //http_build_query($accessTokenRequest),
             ]);
         }
 

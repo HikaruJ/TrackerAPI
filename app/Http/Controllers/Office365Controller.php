@@ -185,14 +185,14 @@ class Office365Controller extends Controller
         $data = $accessTokenResponse->getBody()->getContents();
         if (is_null($data) || empty($data))
         {
-            Log::error('Failed to get access token, due to empty body response', ['methodId' => $logParams['methodId']]);
+            Log::error('Failed to get access token, due to empty body response', ['methodId' => $methodId]);
             return null;
         }
 
         $accessToken = json_decode($data);
         if (is_null($accessToken) || empty($accessToken))
         {
-            Log::error('Failed to serialize access token data', ['methodId' => $logParams['methodId']]);
+            Log::error('Failed to serialize access token data', ['methodId' => $methodId]);
             return null;
         }
 

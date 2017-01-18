@@ -153,7 +153,7 @@ class Office365Controller extends Controller
         $accessTokenRequest = [
             "grant_type" => "authorization_code",
             "code" => $code,
-            "redirect_uri" => "https://94fa34ca.ngrok.io/api/office365/authenticate/",
+            "redirect_uri" => "https://dev.motivo.jp/api/office365/authenticate/",
             "scope" => "mail.read",
             "client_id" => "37ff3cfe-950c-4ed8-bac5-23b598ba43d8",
             "client_secret" => "ngb41oHnnaMQdvoYHv9Cic0"

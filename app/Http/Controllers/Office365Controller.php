@@ -130,7 +130,7 @@ class Office365Controller extends Controller
             "scope" => "openid+offline_access+profile+mail.read",
             "client_id" => "37ff3cfe-950c-4ed8-bac5-23b598ba43d8",
             "client_secret" => "ngb41oHnnaMQdvoYHv9Cic0",
-            "redirect_uri" => "https://94fa34ca.ngrok.io/api/office365/authenticate/"
+            "redirect_uri" => "https://dev.motivo.com/trackerAPI/api/office365/authenticate/"
         ];
         
         $accessTokenResponse = null;
@@ -143,7 +143,7 @@ class Office365Controller extends Controller
 
             $scopes = "openid+offline_access+profile+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite+https%3A%2F%2Foutlook.office.com%2Fmail.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fmail.send+https%3A%2F%2Foutlook.office.com%2Fmail.send.shared+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite+https%3A%2F%2Foutlook.office.com%2Fcalendars.readwrite.shared+https%3A%2F%2Foutlook.office.com%2Fcontacts.readwrite+https%3A%2F%2Foutlook.office.com%2Ftasks.readwrite";
 
-            $body = "grant_type=authorization_code&code=" . $code . "&scope=" . $scopes . "&client_id=37ff3cfe-950c-4ed8-bac5-23b598ba43d8&client_secret=ngb41oHnnaMQdvoYHv9Cic0&redirect_uri=https://dev.motivo.jp/api/office365/authenticate/";
+            $body = "grant_type=authorization_code&code=" . $code . "&scope=" . $scopes . "&client_id=37ff3cfe-950c-4ed8-bac5-23b598ba43d8&client_secret=ngb41oHnnaMQdvoYHv9Cic0&redirect_uri=https://dev.motivo.jp/trackerAPI/api/office365/authenticate/";
 
             $accessTokenResponse = $client->post($accessTokenURI, [
                 'headers' => [
@@ -307,7 +307,7 @@ class Office365Controller extends Controller
         (
             "@odata.type" => "#Microsoft.OutlookServices.PushSubscription",
             "Resource" => "https://outlook.office.com/api/v2.0/me/messages",
-            "NotificationURL" => "https://dev.motivo.jp/trackerNotifications/api/office365/subscription",  
+            "NotificationURL" => "https://dev.motivo.jp/trackerNotifications/api/office365/",  
             "ChangeType" => "Created, Updated",
             "SubscriptionExpirationDateTime" => "2017-04-23T22:46:13.8805047Z",
             "ClientState" => Uuid::generate()->string

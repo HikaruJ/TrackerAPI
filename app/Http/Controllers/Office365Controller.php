@@ -52,19 +52,7 @@ class Office365Controller extends Controller
         {
             $code = $request->input('code');
          
-            // $client = new \GuzzleHttp\Client();
-
-            $client = new \GuzzleHttp\Client(
-                array(
-                        "defaults" => array(
-                                "allow_redirects" => true, "exceptions" => true,
-                                "decode_content" => true,
-                        ),
-                        'cookies' => true,
-                        'verify' => false,
-                        'proxy' => "localhost:8888",
-                )
-            );
+            $client = new \GuzzleHttp\Client();
 
             $accessToken = $this->getAccessToken($client, $code, $methodId);
             if (is_null($accessToken) || empty($accessToken))
@@ -105,33 +93,6 @@ class Office365Controller extends Controller
         }
 
         return view('office365.successAuth');
-    }
-
-    /**
-    * Subscribe to Mail Events From the User
-    *
-    * @param  Request  $request
-    * @return Response
-    */
-    public function notifications(Request $request)
-    {
-        Log::info('Initializing notifications method');
-
-        $validationToken = $request->validationtoken;
-        if (!empty($validationToken)) {
-            Log::debug('Notifications validation check request', ['validationToken' => $validationToken]);
-
-            return response($validationToken, 200)
-                  ->header('Content-Type', 'text/plain');
-        }
-        else
-        {
-            $response = $request->input('value')[0];
-            $resource = $response->Resource;
-            $splitResource = explode('Messages', $resource);
-        }
-
-        return $request->input();
     }
     //////////////////////////
 
@@ -346,7 +307,7 @@ class Office365Controller extends Controller
         (
             "@odata.type" => "#Microsoft.OutlookServices.PushSubscription",
             "Resource" => "https://outlook.office.com/api/v2.0/me/messages",
-            "NotificationURL" => "https://dev.motivo.jp/api/office365/subscription",  
+            "NotificationURL" => "https://dev.motivo.jp/trackerNotifications/api/office365/subscription",  
             "ChangeType" => "Created, Updated",
             "SubscriptionExpirationDateTime" => "2017-04-23T22:46:13.8805047Z",
             "ClientState" => Uuid::generate()->string

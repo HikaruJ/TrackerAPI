@@ -28,7 +28,6 @@ Route::group(array('prefix' => 'idigima'), function()
 Route::group(array('prefix' => 'office365'), function()
 {
     /* GET */
-    Route::get('notifications', 'Office365Controller@notifications');
     Route::get('authenticate', 'Office365Controller@authenticate');
 
     /* POST */

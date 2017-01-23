@@ -25,34 +25,59 @@ class IDigimaController extends Controller
     */
     public function isTokenValid(Request $request)
     {
-        $isValid = 'false';
+        /* Unique method Identifier */
+        $referenceId = Uuid::generate()->string;
+
+        Log::info('Initializing Office365 isTokenValid method', ['referenceId' => $referenceId]);
+
+        $response = [
+            'errorMessage' => '',
+            'isValid' => false,  
+            'referenceId' => $referenceId
+        ];
 
         $userId = $request->userId;
         if (is_null($userId) || empty($userId)) 
         {
-            return $isValid;
+            $errorMessage = "Cannot Validate Token. UserId parameter is missing";
+            Log::error($errorMessage, ['referenceId' => $referenceId]);
+            
+            $response->errorMessage = $errorMessage;
+            return $response;
         }
 
         $user = User::where('id', $userId)->first();
         if (is_null($user) || empty($user)) 
         {
-            return $isValid;
+            $errorMessage = "Cannot Validate Token. User does not exists for Id " . $userId;
+            Log::error($errorMessage, ['referenceId' => $referenceId]);
+            
+            $response->errorMessage = $errorMessage;
+            return $response;
         }
 
         $token = $user->getIDigimaToken();
         if (is_null($token) || empty($token)) 
         {
-            return $isValid;
+            $errorMessage = "Cannot Validate Token. IDigima Token does not Exists";
+            Log::error($errorMessage, ['referenceId' => $referenceId]);
+            
+            $response->errorMessage = $errorMessage;
+            return $response;
         }
 
         $expiryDate = $token->expiry_date;
         if ($expiryDate < Carbon::now())
         {
-            return $isValid;
+            $errorMessage = "Token expired for user " . $user->email;
+            Log::error($errorMessage, ['referenceId' => $referenceId]);
+            
+            $response->errorMessage = $errorMessage;
+            return $response;
         }
 
-        $isValid = 'true';
-        return $isValid;
+        $response->isValid = true;
+        return $response;
     }
 
     /**
@@ -64,9 +89,9 @@ class IDigimaController extends Controller
     public function saveToken(Request $request) 
     {
         /* Unique method Identifier */
-        $methodId = Uuid::generate()->string;
+        $referenceId = Uuid::generate()->string;
 
-        Log::info("Initializing saveToken method", ['methodId' => $methodId]);
+        Log::info("Initializing saveToken method", ['referenceId' => $referenceId]);
 
         /* Retrieve URL and split the paramters of token and userId */
         $fullURL = urldecode($request->fullurl());
@@ -74,19 +99,19 @@ class IDigimaController extends Controller
         $urlParams = $this->fetchUrlParameters($fullURL);
         if (is_null($urlParams)) 
         {
-            return view('idigima.failureAuth');
+            return view('idigima.failureAuth', ['referenceId' => $referenceId]);
         }
 
         $iDigimaToken =  $urlParams['token'];
         $userId = $urlParams['userId'];
 
          /* Logging parameters */
-        $logParams = ['methodId' => $methodId, 'userId' => $userId];
+        $logParams = ['referenceId' => $referenceId, 'userId' => $userId];
         
         $result = $this->saveAccessToken($iDigimaToken, $logParams, $userId);
         if ($result == false) 
         {
-            return view('idigima.failureAuth');
+            return view('idigima.failureAuth', ['referenceId' => $referenceId]);
         }
 
         return view('idigima.successAuth');

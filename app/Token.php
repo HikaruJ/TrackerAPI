@@ -14,6 +14,7 @@ class Token extends Model
     protected $fillable = [
         'access_token',
         'expiry_date',
+        'refresh_token',
         'service_id'
     ];
 

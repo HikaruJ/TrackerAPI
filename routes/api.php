@@ -20,7 +20,6 @@ Route::group(array('prefix' => 'idigima'), function()
     Route::get('saveToken', 'IDigimaController@saveToken');
 
     /* POST */
-    Route::post('createMessage', 'IDigimaController@createMessage');
     Route::post('isTokenValid', 'IDigimaController@isTokenValid');
 });
 
@@ -35,4 +34,9 @@ Route::group(array('prefix' => 'office365'), function()
 });
 
 /* Users API */
-Route::post('users', 'UsersController@store');
+Route::group(array('prefix' => 'users'), function()
+{
+    /* POST */
+    Route::post('checkActivationFlow', 'UsersController@checkActivationFlow');
+    Route::post('saveUser', 'UsersController@store');
+});

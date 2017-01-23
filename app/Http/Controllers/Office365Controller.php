@@ -33,14 +33,16 @@ class Office365Controller extends Controller
     /* Private Members */
     private $office365Client;
     private $office365DBClient;
+    private $tokenHelper;
     //////////////////////////
 
     //////////////////////////
     /* CTOR */
-    public function __construct(Office365ClientInterface $office365Client, Office365DBClientInterface $office365DBClient)
+    public function __construct(Office365ClientInterface $office365Client, Office365DBClientInterface $office365DBClient, TokenHelperInterface $tokenHelper)
     {
         $this->office365Client = $office365Client;
         $this->office365DBClient = $office365DBClient;
+        $this->tokenHelper = $tokenHelper;
     }
     //////////////////////////
 
@@ -92,7 +94,11 @@ class Office365Controller extends Controller
 
             $userId = $user->id;
             
-            $tokenSaved = $this->office365DBClient->saveAccessToken($accessTokenResponse, $referenceId, $userId);
+            $accessToken = $accessTokenResponse->access_token;
+            $expireIn = intval($accessTokenResponse->expire-in);
+            $refreshToken = $accessTokenResponse->refresh_token;
+
+            $tokenSaved = $this->tokenHelper->saveAccessToken($accessToken, $expireIn, $refreshToken, $referenceId, $userId);
             if ($tokenSaved == false) 
             {
                 Log::error('Failed to save access Token.', ['referenceId' => $referenceId, 'userId' => $userId]);

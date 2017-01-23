@@ -18,7 +18,7 @@ class CreateTokensTable extends Migration
             $table->uuid('user_id');
             $table->integer('service_id')->unsigned();
             $table->text('access_token');
-            $table->text('refresh_token');
+            $table->text('refresh_token')->nullable();
             $table->datetime('expiry_date');
             $table->timestamps();
 

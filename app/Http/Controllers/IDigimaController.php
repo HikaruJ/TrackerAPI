@@ -15,6 +15,19 @@ use Webpatser\Uuid\Uuid;
 class IDigimaController extends Controller
 {
     //////////////////////////
+    /* Private Members */
+    private $tokenHelper;
+    //////////////////////////
+
+    //////////////////////////
+    /* CTOR */
+    public function __construct(TokenHelperInterface $tokenHelper)
+    {
+        $this->tokenHelper = $tokenHelper;
+    }
+    //////////////////////////
+
+    //////////////////////////
     /* Public Functions */
 
     /**
@@ -108,7 +121,9 @@ class IDigimaController extends Controller
          /* Logging parameters */
         $logParams = ['referenceId' => $referenceId, 'userId' => $userId];
         
-        $result = $this->saveAccessToken($iDigimaToken, $logParams, $userId);
+        $expireIn = 3200;
+        $refreshToken = null;
+        $result = $this->tokenHelper->saveAccessToken($iDigimaToken, $expireIn, $refreshToken, $logParams, $userId);
         if ($result == false) 
         {
             return view('idigima.failureAuth', ['referenceId' => $referenceId]);
@@ -167,68 +182,5 @@ class IDigimaController extends Controller
 
         return ['token' => $iDigimaToken, 'userId' => $userId];
     } 
-
-    /**
-    * Save Access Token to the Database
-    *
-    * @param  $accessToken
-    * @param  $logParams
-    * @param  $userId
-    * @return boolean result
-    */
-    private function saveAccessToken($accessToken, $logParams, $userId) 
-    {
-        Log::debug('Initializing IDigima saveAccessToken method', $logParams);
-
-        $result = false;
-
-        if (is_null($accessToken) || empty($accessToken)) 
-        {
-            Log::error('AccessToken parameter is not defined', $logParams);
-            return $result;
-        }
-        
-        $user = $user = User::where('id', $userId)->first();
-        if (is_null($user) || empty($user)) 
-        {
-            Log::error('User does not exists', $logParams);
-            return $result;
-        }
-
-        $service = Service::IDigima();
-        if (is_null($service) || empty($service)) 
-        {
-            Log::error('IDigima service is not defined', $logParams);
-            return $result;
-        }
-
-        $token = $user->tokens()->where('access_token', $accessToken)->first();
-        if (is_null($token) || empty($token)) 
-        {
-            Log::debug('Saving Access Token', $logParams);
-
-            $user->tokens()->create([
-                'access_token' => $accessToken,
-                'expiry_date' => Carbon::now()->addDays(1),
-                'service_id' => $service->id
-            ]);
-
-            $user->save();
-        }
-        else if ($token->expiry_date < Carbon::now()) 
-        {
-            Log::debug('Updating Access Token', $logParams);
-
-            $token->update([
-                'access_token' => $accessToken,
-                'expiry_date' => Carbon::now()->addDays(1),
-                'service_id' => $service->id
-            ]);
-        }
-
-        $result = true;
-        return $result;
-    }
-
     //////////////////////////
 }

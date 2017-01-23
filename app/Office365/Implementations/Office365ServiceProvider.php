@@ -1,5 +1,6 @@
 <?php namespace Office365;
 
+use Helpers;
 use Illuminate\Support\ServiceProvider;
 
 class Office365ServiceProvider extends ServiceProvider
@@ -8,12 +9,12 @@ class Office365ServiceProvider extends ServiceProvider
     {
         $this->app->bind('Office365\Office365ClientInterface', function ($app) {
             $client = new \GuzzleHttp\Client();
-            return new Office365Client($client);
+            $tokenHelper = App::make('TokenHelperInterface');
+            return new Office365Client($client, tokenHelper);
         });
 
         $this->app->bind('Office365\Office365DBClientInterface', function ($app) {
-            $client = new \GuzzleHttp\Client();
-            return new Office365DBClient($client);
+            return new Office365DBClient();
         });
     }
 }

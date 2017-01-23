@@ -25,10 +25,12 @@
     "autoload": {
         "classmap": [
             "database",
+            "App/Helpers",
             "App/Office365"
         ],
         "psr-4": {
             "App\\": "app/",
+            "Helpers\\": "helpers/",
             "Office365\\": "office365/"
         }
     },

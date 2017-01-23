@@ -15,7 +15,6 @@ class Office365DBClient implements Office365DBClientInterface
     //////////////////////////
     /* Private Members */
     private $client = null;
-    private $serverURI = null;
     //////////////////////////
 
     //////////////////////////
@@ -23,7 +22,6 @@ class Office365DBClient implements Office365DBClientInterface
     public function __construct($client) 
     {
         $this->client = $client;
-        $this->serverURI = "https://e6f620dc.ngrok.io/api";
     }
     //////////////////////////
 
@@ -88,25 +86,47 @@ class Office365DBClient implements Office365DBClientInterface
         {
             Log::debug('Saving Access Token', $logParams);
 
-            $user->tokens()->create([
-                'access_token' => $accessToken,
-                'expiry_date' => Carbon::now()->addSeconds($expireInSeconds),
-                'refresh_token' => $refreshToken,
-                'service_id' => $service->id
-            ]);
+            try
+            {
+                $user->tokens()->create([
+                    'access_token' => $accessToken,
+                    'expiry_date' => Carbon::now()->addSeconds($expireInSeconds),
+                    'refresh_token' => $refreshToken,
+                    'service_id' => $service->id
+                ]);
 
-            $user->save();
+                $user->save();
+            }
+
+            catch (\Exception $e)
+            {
+                $errorMessage = $e->getMessage();
+                $innerError = $e->getResponse()->getBody()->getContents();
+                Log::error('Could not save a new access token for user in the database', ['errorMessage' => errorMessage, 'innerError' => $innerError, 'referenceId' => $referenceId, 'userId' => $userId]);
+                return $result;
+            }
         }
         else if ($token->expiry_date < Carbon::now()) 
         {
             Log::debug('Updating Access Token', $logParams);
 
-            $token->update([
-                'access_token' => $accessToken,
-                'expiry_date' => Carbon::now()->addSeconds($expireInSeconds),
-                'refresh_token' => $refreshToken,
-                'service_id' => $service->id
-            ]);
+            try
+            {
+                $token->update([
+                    'access_token' => $accessToken,
+                    'expiry_date' => Carbon::now()->addSeconds($expireInSeconds),
+                    'refresh_token' => $refreshToken,
+                    'service_id' => $service->id
+                ]);
+            }
+
+            catch (\Exception $e)
+            {
+                $errorMessage = $e->getMessage();
+                $innerError = $e->getResponse()->getBody()->getContents();
+                Log::error('Could not update the access token for user in the database', ['errorMessage' => errorMessage, 'innerError' => $innerError, 'referenceId' => $referenceId, 'userId' => $userId]);
+                return $result;
+            }
         }
 
         $result = true;
@@ -141,23 +161,45 @@ class Office365DBClient implements Office365DBClientInterface
         {
             Log::debug('Saving Subscription', $logParams);
 
-            $user->subscription()->create([
-                'access_token' => $accessToken,
-                'expiration_date' => Carbon::now()->addDays(1),
-                'service_id' => $service->id
-            ]);
+            try
+            {
+                 $user->subscription()->create([
+                    'access_token' => $accessToken,
+                    'expiration_date' => Carbon::now()->addDays(1),
+                    'service_id' => $service->id
+                ]);
 
-            $user->save();
+                $user->save();
+            }
+
+            catch (\Exception $e)
+            {
+                $errorMessage = $e->getMessage();
+                $innerError = $e->getResponse()->getBody()->getContents();
+                Log::error('Could not save a new subscription for user in the database', ['errorMessage' => errorMessage, 'innerError' => $innerError, 'referenceId' => $referenceId, 'userId' => $userId]);
+                return $result;
+            }
         }
         else if ($subscription->expiration_date < Carbon::now()) 
         {
             Log::debug('Updating Subscription', $logParams);
 
-            $token->update([
-                'access_token' => $accessToken,
-                'expiration_date' => Carbon::now()->addDays(1),
-                'service_id' => $service->id
-            ]);
+            try
+            {
+                $token->update([
+                    'access_token' => $accessToken,
+                    'expiration_date' => Carbon::now()->addDays(1),
+                    'service_id' => $service->id
+                ]);
+            }
+
+            catch (\Exception $e)
+            {
+                $errorMessage = $e->getMessage();
+                $innerError = $e->getResponse()->getBody()->getContents();
+                Log::error('Could not update the subscription for user in the database', ['errorMessage' => errorMessage, 'innerError' => $innerError, 'referenceId' => $referenceId, 'userId' => $userId]);
+                return $result;
+            }
         }
 
         $result = true;

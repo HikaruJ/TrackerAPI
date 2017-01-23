@@ -18,7 +18,7 @@ class Office365Client implements Office365ClientInterface
     public function __construct($client) 
     {
         $this->client = $client;
-        $this->serverURI = "https://e6f620dc.ngrok.io/api";
+        $this->serverURI = "https://dev.motivo.jp/trackerAPI/api";
     }
     //////////////////////////
 

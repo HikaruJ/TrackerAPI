@@ -131,7 +131,7 @@ class Office365Controller extends Controller
         Log::info('Initializing Office365 isTokenValid method', ['referenceId' => $referenceId]);
 
         $response = [
-            'errorMessage' => '',
+            'message' => '',
             'isValid' => false,  
             'referenceId' => $referenceId
         ];
@@ -142,7 +142,7 @@ class Office365Controller extends Controller
             $errorMessage = "Cannot Validate Token. UserId parameter is missing";
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
-            $response->errorMessage = $errorMessage;
+            $response['message'] = $errorMessage;
             return $response;
         }
 
@@ -152,7 +152,7 @@ class Office365Controller extends Controller
             $errorMessage = "Cannot Validate Token. User does not exists for Id " . $userId;
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
-            $response->errorMessage = $errorMessage;
+            $response['message'] = $errorMessage;
             return $response;
         }
 
@@ -162,7 +162,7 @@ class Office365Controller extends Controller
             $errorMessage = "Cannot Validate Token. Office365 Token does not Exists";
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
-            $response->errorMessage = $errorMessage;
+            $response['message'] = $errorMessage;
             return $response;
         }
 
@@ -172,7 +172,7 @@ class Office365Controller extends Controller
             $errorMessage = "Token expired for user " . $user->email;
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
-            $response->errorMessage = $errorMessage;
+            $response['message'] = $errorMessage;
             return $response;
         }
 

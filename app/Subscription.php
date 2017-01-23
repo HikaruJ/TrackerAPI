@@ -11,7 +11,7 @@ class Subscription extends Model
      *
      * @var array
      */
-    protected $fillable = ['id', 'expiration_date', 'subscription_id'];
+    protected $fillable = ['change_type', 'id', 'expiration_date', 'subscription_id', 'resource'];
 
     /**
     * A Subscription belongs to a User.

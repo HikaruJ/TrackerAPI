@@ -20,6 +20,7 @@ class CreateSubscriptionsTable extends Migration
             $table->uuid('user_id');
             $table->string('change_type');
             $table->datetime('expiration_date');
+            $table->string('resource');
 
             $table->foreign('user_id')
                     ->references('id')

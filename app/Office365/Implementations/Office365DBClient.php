@@ -45,9 +45,10 @@ class Office365DBClient implements Office365DBClientInterface
             try
             {
                  $user->subscription()->create([
-                    'access_token' => $accessToken,
-                    'expiration_date' => Carbon::now()->addDays(1),
-                    'service_id' => $service->id
+                    'change_type' => $subscribeResult->ChangeType,
+                    'expiration_date' => $subscribeResult->SubscriptionExpirationDateTime,
+                    'resource' => $subscribeResult->Resource,
+                    'subscription_id' => $subscribeResult->Id
                 ]);
 
                 $user->save();
@@ -68,9 +69,10 @@ class Office365DBClient implements Office365DBClientInterface
             try
             {
                 $token->update([
-                    'access_token' => $accessToken,
-                    'expiration_date' => Carbon::now()->addDays(1),
-                    'service_id' => $service->id
+                    'change_type' => $subscribeResult->ChangeType,
+                    'expiration_date' => $subscribeResult->SubscriptionExpirationDateTime,
+                    'resource' => $subscribeResult->Resource,
+                    'subscription_id' => $subscribeResult->Id
                 ]);
             }
 

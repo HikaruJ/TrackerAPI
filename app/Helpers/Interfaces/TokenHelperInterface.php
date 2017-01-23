@@ -2,5 +2,5 @@
 
 interface TokenHelperInterface
 {
-    public function saveAccessToken($accessToken, $expireIn, $refreshToken, $referenceId, $service, $userId) 
+    public function saveAccessToken($accessToken, $expiresIn, $refreshToken, $referenceId, $service, $userId);
 }

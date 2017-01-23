@@ -1,5 +1,6 @@
 <?php namespace Office365;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Office365;
@@ -122,6 +123,8 @@ class Office365Client implements Office365ClientInterface
             return null;
         }
 
+        Log::debug("Recieved access token data", ['referenceId' => $referenceId]);
+
         return $accessTokenResponse;
     }
 
@@ -173,6 +176,14 @@ class Office365Client implements Office365ClientInterface
         }
 
         $userProfile = json_decode($userProfileResponse);
+        if (is_null($userProfile) || empty($userProfile))
+        {
+            Log::error('Failed to serialize user profile data', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        Log::debug("Recieved user profile data", ['referenceId' => $referenceId]);
+
         return $userProfile;
     }
 
@@ -249,6 +260,8 @@ class Office365Client implements Office365ClientInterface
             return null;
         }
 
+        Log::debug("Recieved access token data", ['referenceId' => $referenceId]);
+
         return $accessTokenResponse;
     }
 
@@ -279,7 +292,7 @@ class Office365Client implements Office365ClientInterface
 
         try
         {
-            $subscriptionResponse = $this->client->patch($subscriptionURI, [
+            $response = $this->client->patch($subscriptionURI, [
                 'headers' => [
                     'Content-Type' => 'application/json', 
                     'Authorization' => "Bearer {$accessToken}"
@@ -296,7 +309,23 @@ class Office365Client implements Office365ClientInterface
             return null;
         }
 
-        return subscriptionResponse;
+        $subscriptionResponse = $response->getBody()->getContents();
+        if (is_null($accessTokenResponse) || empty($accessTokenResponse))
+        {
+            Log::error('Failed to get subscription, due to empty body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        $subscriptionResponse = json_decode($subscriptionResponse);
+        if (is_null($subscriptionResponse) || empty($subscriptionResponse))
+        {
+            Log::error('Failed to serialize subscription data', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        Log::debug("Recieved subscription data", ['referenceId' => $referenceId]);
+
+        return $subscriptionResponse;
     }
 
     /**
@@ -313,7 +342,7 @@ class Office365Client implements Office365ClientInterface
 
         $subscriptionURI = "https://outlook.office.com/api/v2.0/me/subscriptions";
 
-        $subscriptionDate = Carbon::now()->addDays(3)->format('Y-m-d\TH:i:s\Z'); //"2017-04-23T22:46:13.8805047Z",
+        $subscriptionDate = Carbon::now()->addMinutes(3)->format('Y-m-d\TH:i:s\Z');
         $subscriptionData = array
         (
             "@odata.type" => "#Microsoft.OutlookServices.PushSubscription",
@@ -324,7 +353,7 @@ class Office365Client implements Office365ClientInterface
             "ClientState" => Uuid::generate()->string,
         );
 
-        $subscriptionDataJSON = json_encode($subscriptionData,JSON_UNESCAPED_SLASHES);
+        $subscriptionDataJSON = json_decode($subscriptionData,JSON_UNESCAPED_SLASHES);
         $accessToken = $accessTokenResponse->access_token;
 
         try
@@ -346,7 +375,23 @@ class Office365Client implements Office365ClientInterface
             return null;
         }
 
-        return subscriptionResponse;
+        $subscriptionResponse = $response->getBody()->getContents();
+        if (is_null($accessTokenResponse) || empty($accessTokenResponse))
+        {
+            Log::error('Failed to get subscription, due to empty body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        $subscriptionResponse = json_decode($subscriptionResponse);
+        if (is_null($subscriptionResponse) || empty($subscriptionResponse))
+        {
+            Log::error('Failed to serialize subscription data', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        Log::debug("Recieved subscription data", ['referenceId' => $referenceId]);
+
+        return $subscriptionResponse;
     }
     //////////////////////////
 }

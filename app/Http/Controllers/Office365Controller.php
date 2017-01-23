@@ -96,10 +96,11 @@ class Office365Controller extends Controller
             $userId = $user->id;
             
             $accessToken = $accessTokenResponse->access_token;
-            $expireIn = intval($accessTokenResponse->expire-in);
+            $expiresIn = intval($accessTokenResponse->expires_in);
             $refreshToken = $accessTokenResponse->refresh_token;
+            $service = Service::Office365();
 
-            $tokenSaved = $this->tokenHelper->saveAccessToken($accessToken, $expireIn, $refreshToken, $referenceId, $userId);
+            $tokenSaved = $this->tokenHelper->saveAccessToken($accessToken, $expiresIn, $refreshToken, $referenceId, $service, $userId);
             if ($tokenSaved == false) 
             {
                 Log::error('Failed to save access Token.', ['referenceId' => $referenceId, 'userId' => $userId]);
@@ -107,7 +108,7 @@ class Office365Controller extends Controller
             }
 
             $subscribeResult = $this->office365Client->subscribeToMailEvents($accessTokenResponse, $referenceId, $userId);
-            if ($subscribeResult == false) 
+            if (is_null($subscribeResult) || empty($subscribeResult)) 
             {
                 Log::error('Failed to subscribe to Office365 subscription', ['referenceId' => $referenceId, 'userId' => $userId]);
                 return view('office365.failureAuth', ['referenceId' => $referenceId]);
@@ -183,7 +184,7 @@ class Office365Controller extends Controller
             return $response;
         }
 
-        $response->isValid = true;
+        $response['isValid'] = true;
         return $response;
     }
     //////////////////////////

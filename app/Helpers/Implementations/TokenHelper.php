@@ -4,8 +4,8 @@ use App\Service;
 use App\Token;
 use App\User;
 use Carbon\Carbon;
+use Helpers\TokenHelperInterface;
 use Illuminate\Support\Facades\Log;
-use Helpers;
 
 class TokenHelper implements TokenHelperInterface
 {
@@ -16,14 +16,14 @@ class TokenHelper implements TokenHelperInterface
     * Save Access Token to the Database
     *
     * @param  $accessToken - Access Token Data from Microsoft
-    * @param  $expireIn - Expiration (in seconds) of the Access Token
+    * @param  $expiresIn - Expiration (in seconds) of the Access Token
     * @param  $refreshToken - Refresh Token Data from Microsoft (nullable)
     * @param  $referenceId - Main method reference Id
     * @param  $service - Service that fetched the Access Token
     * @param  $userId - Current Logged-In User Id
     * @return boolean result - Was Token Saved Successfully
     */
-    public function saveAccessToken($accessToken, $expireIn, $refreshToken, $referenceId, $service, $userId) 
+    public function saveAccessToken($accessToken, $expiresIn, $refreshToken, $referenceId, $service, $userId) 
     {
         $logParams = ['referenceId' => $referenceId, 'userId' => $userId];
 
@@ -44,10 +44,10 @@ class TokenHelper implements TokenHelperInterface
         }
 
         $expireInSeconds = $expiresIn / 1000;
+
         if (is_null($refreshToken) || empty($refreshToken)) 
         {
-            Log::error('refreshToken parameter is not defined', $logParams);
-            return $result;
+            Log::debug('refreshToken parameter is not defined', $logParams);
         }
 
         $user = $user = User::where('id', $userId)->first();

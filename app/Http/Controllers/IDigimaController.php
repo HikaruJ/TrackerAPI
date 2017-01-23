@@ -90,7 +90,7 @@ class IDigimaController extends Controller
             return $response;
         }
 
-        $response->isValid = true;
+        $response['isValid'] = true;
         return $response;
     }
 
@@ -122,9 +122,11 @@ class IDigimaController extends Controller
          /* Logging parameters */
         $logParams = ['referenceId' => $referenceId, 'userId' => $userId];
         
-        $expireIn = 3200;
+        $expiresIn = 32000;
         $refreshToken = null;
-        $result = $this->tokenHelper->saveAccessToken($iDigimaToken, $expireIn, $refreshToken, $logParams, $userId);
+        $service = Service::IDigima();
+
+        $result = $this->tokenHelper->saveAccessToken($iDigimaToken, $expiresIn, $refreshToken, $logParams, $service, $userId);
         if ($result == false) 
         {
             return view('idigima.failureAuth', ['referenceId' => $referenceId]);

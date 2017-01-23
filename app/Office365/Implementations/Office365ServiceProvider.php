@@ -9,8 +9,7 @@ class Office365ServiceProvider extends ServiceProvider
     {
         $this->app->bind('Office365\Office365ClientInterface', function ($app) {
             $client = new \GuzzleHttp\Client();
-            $tokenHelper = App::make('TokenHelperInterface');
-            return new Office365Client($client, tokenHelper);
+            return new Office365Client($client);
         });
 
         $this->app->bind('Office365\Office365DBClientInterface', function ($app) {

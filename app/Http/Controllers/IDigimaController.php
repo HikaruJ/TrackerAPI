@@ -7,6 +7,7 @@ use App\User;
 use Carbon\Carbon;
 use \Cache;
 use GuzzleHttp\Client;
+use Helpers\TokenHelperInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;

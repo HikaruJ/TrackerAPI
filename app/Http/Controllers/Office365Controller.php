@@ -8,6 +8,7 @@ use App\Token;
 use App\User;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Helpers\TokenHelperInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Office365\Office365ClientInterface;

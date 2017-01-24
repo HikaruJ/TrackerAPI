@@ -107,19 +107,19 @@ class Office365Client implements Office365ClientInterface
 
         if (!property_exists($accessTokenResponse, 'access_token'))
         {
-            Log::error('Failed to get access token, due to missing "access_token" parameter in body response', ['referenceId' => $referenceId]);
+            Log::error('Failed to get access token data, due to missing "access_token" parameter in body response', ['referenceId' => $referenceId]);
             return null;
         }
 
         if (!property_exists($accessTokenResponse, 'expires_in'))
         {
-            Log::error('Failed to get access token, due to missing "expires_in" parameter in body response', ['referenceId' => $referenceId]);
+            Log::error('Failed to get access token data, due to missing "expires_in" parameter in body response', ['referenceId' => $referenceId]);
             return null;
         }
 
         if (!property_exists($accessTokenResponse, 'refresh_token'))
         {
-            Log::error('Failed to get access token, due to missing "refresh_token" parameter in body response', ['referenceId' => $referenceId]);
+            Log::error('Failed to get access token data, due to missing "refresh_token" parameter in body response', ['referenceId' => $referenceId]);
             return null;
         }
 
@@ -244,19 +244,19 @@ class Office365Client implements Office365ClientInterface
 
         if (!property_exists($accessTokenResponse, 'access_token'))
         {
-            Log::error('Failed to get access token, due to missing "access_token" parameter in body response', ['referenceId' => $referenceId]);
+            Log::error('Failed to get access token data, due to missing "access_token" parameter in body response', ['referenceId' => $referenceId]);
             return null;
         }
 
         if (!property_exists($accessTokenResponse, 'expires_in'))
         {
-            Log::error('Failed to get access token, due to missing "expires_in" parameter in body response', ['referenceId' => $referenceId]);
+            Log::error('Failed to get access token data, due to missing "expires_in" parameter in body response', ['referenceId' => $referenceId]);
             return null;
         }
 
         if (!property_exists($accessTokenResponse, 'refresh_token'))
         {
-            Log::error('Failed to get access token, due to missing "refresh_token" parameter in body response', ['referenceId' => $referenceId]);
+            Log::error('Failed to get access token data, due to missing "refresh_token" parameter in body response', ['referenceId' => $referenceId]);
             return null;
         }
 
@@ -277,22 +277,22 @@ class Office365Client implements Office365ClientInterface
     {
         Log::debug('Initializing Office365 subscribeToMailEvents method', ['referenceId' => $referenceId, 'userId' => $userId]);    
 
-        $subscriptionURI = "https://outlook.office.com/api/v2.0/me/subscriptions/" . $subscriptionId;
+        $URI = "https://outlook.office.com/api/v2.0/me/subscriptions/" . $subscriptionId;
 
         $subscriptionUpdateDate = Carbon::now()->addDays(3)->format('Y-m-d\TH:i:s\Z'); //"2017-04-23T22:46:13.8805047Z",
 
-        $subscriptionData = array
+        $data = array
         (
             "@odata.type" => "#Microsoft.OutlookServices.PushSubscription",
             "SubscriptionExpirationDateTime" => $subscriptionUpdateDate
         );
 
-        $subscriptionDataJSON = json_encode($subscriptionData,JSON_UNESCAPED_SLASHES);
+        $subscriptionDataJSON = json_encode($data,JSON_UNESCAPED_SLASHES);
         $accessToken = $accessTokenResponse->access_token;
 
         try
         {
-            $response = $this->client->patch($subscriptionURI, [
+            $response = $this->client->patch($URI, [
                 'headers' => [
                     'Content-Type' => 'application/json', 
                     'Authorization' => "Bearer {$accessToken}"
@@ -320,6 +320,36 @@ class Office365Client implements Office365ClientInterface
         if (is_null($subscriptionResponse) || empty($subscriptionResponse))
         {
             Log::error('Failed to serialize subscription data', ['referenceId' => $referenceId]);
+            return null;
+        }
+        
+        if (!property_exists($subscriptionResponse, 'ChangeType'))
+        {
+            Log::error('Failed to get subscription data, due to missing "ChangeType" parameter in body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        if (!property_exists($subscriptionResponse, 'Id'))
+        {
+            Log::error('Failed to get subscription data, due to missing "Id" parameter in body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+        
+        if (!property_exists($subscriptionResponse, 'SubscriptionExpirationDateTime'))
+        {
+            Log::error('Failed to get subscription data, due to missing "SubscriptionExpirationDateTime" parameter in body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        if (!property_exists($subscriptionResponse, 'NotificationURL'))
+        {
+            Log::error('Failed to get subscription data, due to missing "NotificationURL" parameter in body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        if (!property_exists($subscriptionResponse, 'Resource'))
+        {
+            Log::error('Failed to get subscription data, due to missing "Resource" parameter in body response', ['referenceId' => $referenceId]);
             return null;
         }
 
@@ -340,10 +370,10 @@ class Office365Client implements Office365ClientInterface
     {
         Log::debug('Initializing Office365 subscribeToMailEvents method', ['referenceId' => $referenceId, 'userId' => $userId]);    
 
-        $subscriptionURI = "https://outlook.office.com/api/v2.0/me/subscriptions";
+        $URI = "https://outlook.office.com/api/v2.0/me/subscriptions";
 
         $subscriptionDate = Carbon::now()->addMinutes(3)->format('Y-m-d\TH:i:s\Z');
-        $subscriptionData = array
+        $data = array
         (
             "@odata.type" => "#Microsoft.OutlookServices.PushSubscription",
             "Resource" => "https://outlook.office.com/api/v2.0/me/messages",
@@ -353,12 +383,12 @@ class Office365Client implements Office365ClientInterface
             "ClientState" => Uuid::generate()->string,
         );
 
-        $subscriptionDataJSON = json_decode($subscriptionData,JSON_UNESCAPED_SLASHES);
+        $subscriptionDataJSON = json_encode($data,JSON_UNESCAPED_SLASHES);
         $accessToken = $accessTokenResponse->access_token;
 
         try
         {
-            $subscriptionResponse = $this->client->post($subscriptionURI, [
+            $response = $this->client->post($URI, [
                 'headers' => [
                     'Content-Type' => 'application/json', 
                     'Authorization' => "Bearer {$accessToken}"
@@ -386,6 +416,36 @@ class Office365Client implements Office365ClientInterface
         if (is_null($subscriptionResponse) || empty($subscriptionResponse))
         {
             Log::error('Failed to serialize subscription data', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        if (!property_exists($subscriptionResponse, 'ChangeType'))
+        {
+            Log::error('Failed to get subscription data, due to missing "ChangeType" parameter in body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        if (!property_exists($subscriptionResponse, 'Id'))
+        {
+            Log::error('Failed to get subscription data, due to missing "Id" parameter in body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+        
+        if (!property_exists($subscriptionResponse, 'SubscriptionExpirationDateTime'))
+        {
+            Log::error('Failed to get subscription data, due to missing "SubscriptionExpirationDateTime" parameter in body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        if (!property_exists($subscriptionResponse, 'NotificationURL'))
+        {
+            Log::error('Failed to get subscription data, due to missing "NotificationURL" parameter in body response', ['referenceId' => $referenceId]);
+            return null;
+        }
+
+        if (!property_exists($subscriptionResponse, 'Resource'))
+        {
+            Log::error('Failed to get subscription data, due to missing "Resource" parameter in body response', ['referenceId' => $referenceId]);
             return null;
         }
 

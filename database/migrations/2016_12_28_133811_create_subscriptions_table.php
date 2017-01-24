@@ -16,10 +16,11 @@ class CreateSubscriptionsTable extends Migration
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->increments('id');
             $table->timestamps();
-            $table->string('subscription_id');
             $table->uuid('user_id');
+            $table->string('subscription_id');
             $table->string('change_type');
             $table->datetime('expiration_date');
+            $table->string('notification_url');
             $table->string('resource');
 
             $table->foreign('user_id')

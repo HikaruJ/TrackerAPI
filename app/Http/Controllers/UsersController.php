@@ -217,14 +217,18 @@ class UsersController extends Controller
             {
                 $subscriptionId = $subscription->subscription_id;
                 $subscriptionResult = $this->office365Client->renewSubscriptionToMailEvents($accessTokenResponse, $subscriptionId, $referenceId);
-                if (is_null($subscription) || empty($subscription))
+                if (is_null($subscriptionResult) || empty($subscriptionResult))
                 {
                     Log::error('Failed to renew subscription ' . $subscriptionId . ' for user', ['referenceId' => $referenceId, 'userId' => $userId]);
                     return $response;
                 }
 
-                Log::error('Failed to find subscription for user', ['referenceId' => $referenceId, 'userId' => $userId]);
-                return $response;
+                $subscriptionSaved = $this->office365DBClient->saveSubscription($referenceId, $subscriptionResult, $userId);
+                if ($subscriptionSaved == false) 
+                {
+                    Log::error('Failed to update subscription in database', ['referenceId' => $referenceId, 'userId' => $userId]);
+                    return $response;
+                }
             }
         }
 

@@ -37,18 +37,25 @@ class Office365DBClient implements Office365DBClientInterface
             return $result;
         }
 
-        $subscription = $user->subscriptions()->where('user_id', $userId)->first();
+        $subscriptionChangeType = $subscribeResult->ChangeType;
+        $subscriptionExpirationDate = $subscribeResult->SubscriptionExpirationDateTime;
+        $subscriptionId = $subscribeResult->Id;
+        $subscriptionNotificationURL = $subscribeResult->NotificationURL;
+        $subscriptionResource = $subscribeResult->Resource;
+
+        $subscription = $user->subscriptions()->where('subscription_id', $subscriptionId)->first();
         if (is_null($subscription) || empty($subscription)) 
         {
             Log::debug('Saving Subscription', $logParams);
 
             try
             {
-                 $user->subscription()->create([
-                    'change_type' => $subscribeResult->ChangeType,
-                    'expiration_date' => $subscribeResult->SubscriptionExpirationDateTime,
-                    'resource' => $subscribeResult->Resource,
-                    'subscription_id' => $subscribeResult->Id
+                 $user->subscriptions()->create([
+                    'change_type' => $subscriptionChangeType,
+                    'expiration_date' => $subscriptionExpirationDate,
+                    'notification_url' => $subscriptionNotificationURL,
+                    'resource' => $subscriptionResource,
+                    'subscription_id' => $subscriptionId
                 ]);
 
                 $user->save();
@@ -57,8 +64,7 @@ class Office365DBClient implements Office365DBClientInterface
             catch (\Exception $e)
             {
                 $errorMessage = $e->getMessage();
-                $innerError = $e->getResponse()->getBody()->getContents();
-                Log::error('Could not save a new subscription for user in the database', ['errorMessage' => errorMessage, 'innerError' => $innerError, 'referenceId' => $referenceId, 'userId' => $userId]);
+                Log::error('Could not save a new subscription for user in the database', ['errorMessage' => errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
                 return $result;
             }
         }
@@ -68,19 +74,19 @@ class Office365DBClient implements Office365DBClientInterface
 
             try
             {
-                $token->update([
-                    'change_type' => $subscribeResult->ChangeType,
-                    'expiration_date' => $subscribeResult->SubscriptionExpirationDateTime,
-                    'resource' => $subscribeResult->Resource,
-                    'subscription_id' => $subscribeResult->Id
+                $user->subscriptions()->update([
+                    'change_type' => $subscriptionChangeType,
+                    'expiration_date' => $subscriptionExpirationDate,
+                    'notification_url' => $subscriptionNotificationURL,
+                    'resource' => $subscriptionResource,
+                    'subscription_id' => $subscriptionId
                 ]);
             }
 
             catch (\Exception $e)
             {
                 $errorMessage = $e->getMessage();
-                $innerError = $e->getResponse()->getBody()->getContents();
-                Log::error('Could not update the subscription for user in the database', ['errorMessage' => errorMessage, 'innerError' => $innerError, 'referenceId' => $referenceId, 'userId' => $userId]);
+                Log::error('Could not update the subscription for user in the database', ['errorMessage' => errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
                 return $result;
             }
         }

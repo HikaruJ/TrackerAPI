@@ -117,7 +117,7 @@ class Office365Controller extends Controller
             $subscriptionSaved = $this->office365DBClient->saveSubscription($referenceId, $subscribeResult, $userId);
             if ($subscriptionSaved == false) 
             {
-                Log::error('Failed to save subscription.', ['referenceId' => $referenceId, 'userId' => $userId]);
+                Log::error('Failed to save subscription in database', ['referenceId' => $referenceId, 'userId' => $userId]);
                 return view('office365.failureAuth', ['referenceId' => $referenceId]);
             }
         }

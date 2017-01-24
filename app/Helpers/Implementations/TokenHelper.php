@@ -83,8 +83,7 @@ class TokenHelper implements TokenHelperInterface
             catch (\Exception $e)
             {
                 $errorMessage = $e->getMessage();
-                $innerError = $e->getResponse()->getBody()->getContents();
-                Log::error('Could not save a new access token for user in the database', ['errorMessage' => errorMessage, 'innerError' => $innerError, 'referenceId' => $referenceId, 'userId' => $userId]);
+                Log::error('Could not save a new access token for user in the database', ['errorMessage' => errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
                 return $result;
             }
         }
@@ -105,8 +104,7 @@ class TokenHelper implements TokenHelperInterface
             catch (\Exception $e)
             {
                 $errorMessage = $e->getMessage();
-                $innerError = $e->getResponse()->getBody()->getContents();
-                Log::error('Could not update the access token for user in the database', ['errorMessage' => errorMessage, 'innerError' => $innerError, 'referenceId' => $referenceId, 'userId' => $userId]);
+                Log::error('Could not update the access token for user in the database', ['errorMessage' => errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
                 return $result;
             }
         }

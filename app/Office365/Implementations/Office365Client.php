@@ -271,9 +271,10 @@ class Office365Client implements Office365ClientInterface
     * @param  $accessTokenResponse - Access Token Data from Microsoft
     * @param  $subscriptionId - Access Token Data from Microsoft
     * @param  $referenceId - Main method reference Id
+    * @param  $userId - The logged-in user Id
     * @return Result result - Subscription Response (In Case of an Error, null will Return)
     */
-    public function renewSubscriptionToMailEvents($accessTokenResponse, $subscriptionId, $referenceId) 
+    public function renewSubscriptionToMailEvents($accessTokenResponse, $subscriptionId, $referenceId, $userId) 
     {
         Log::debug('Initializing Office365 subscribeToMailEvents method', ['referenceId' => $referenceId, 'userId' => $userId]);    
 

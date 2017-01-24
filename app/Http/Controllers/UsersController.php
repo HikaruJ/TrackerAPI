@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Service;
 use App\User;
 use App\Http\Requests\CreateUserRequest;
 use Carbon\Carbon;
@@ -229,7 +230,7 @@ class UsersController extends Controller
             if ($subscription->expiration_date < Carbon::now())
             {
                 $subscriptionId = $subscription->subscription_id;
-                $subscriptionResult = $this->office365Client->renewSubscriptionToMailEvents($accessTokenResponse, $subscriptionId, $referenceId);
+                $subscriptionResult = $this->office365Client->renewSubscriptionToMailEvents($accessTokenResponse, $subscriptionId, $referenceId, $userId);
                 if (is_null($subscriptionResult) || empty($subscriptionResult))
                 {
                     Log::error('Failed to renew subscription ' . $subscriptionId . ' for user', ['referenceId' => $referenceId, 'userId' => $userId]);

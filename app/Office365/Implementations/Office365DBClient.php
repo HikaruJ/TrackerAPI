@@ -64,7 +64,7 @@ class Office365DBClient implements Office365DBClientInterface
             catch (\Exception $e)
             {
                 $errorMessage = $e->getMessage();
-                Log::error('Could not save a new subscription for user in the database', ['errorMessage' => errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
+                Log::error('Could not save a new subscription for user in the database', ['errorMessage' => $errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
                 return $result;
             }
         }
@@ -86,7 +86,7 @@ class Office365DBClient implements Office365DBClientInterface
             catch (\Exception $e)
             {
                 $errorMessage = $e->getMessage();
-                Log::error('Could not update the subscription for user in the database', ['errorMessage' => errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
+                Log::error('Could not update the subscription for user in the database', ['errorMessage' => $errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
                 return $result;
             }
         }

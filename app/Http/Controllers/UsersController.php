@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\User;
 use App\Http\Requests\CreateUserRequest;
 use Carbon\Carbon;
+use Helpers\TokenHelperInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Office365\Office365ClientInterface;
@@ -17,14 +18,16 @@ class UsersController extends Controller
     /* Private Members */
     private $office365Client;
     private $office365DBClient;
+    private $tokenHelper;
     //////////////////////////
 
     //////////////////////////
     /* CTOR */
-    public function __construct(Office365ClientInterface $office365Client, Office365DBClientInterface $office365DBClient)
+    public function __construct(Office365ClientInterface $office365Client, Office365DBClientInterface $office365DBClient, TokenHelperInterface $tokenHelper)
     {
         $this->office365Client = $office365Client;
         $this->office365DBClient = $office365DBClient;
+        $this->tokenHelper = $tokenHelper;
     }
     //////////////////////////
 
@@ -45,6 +48,7 @@ class UsersController extends Controller
 
         $response = [
             'idigimaTokenValid' => false,
+            'message' => '',
             'outlook365TokenValid' => false,
             'userExists' => false,
             'userId' => null
@@ -53,14 +57,18 @@ class UsersController extends Controller
         $email = $request->email;
         if (is_null($email) || empty($email)) 
         {
-            Log::debug("Cannot check activtion flow. Email parameter is missing", ['referenceId' => $referenceId]);
+            $debugMessage = "Cannot check activtion flow. Email parameter is missing";
+            Log::debug($debugMessage, ['referenceId' => $referenceId]);
+            $response['message'] = $debugMessage;
         }
 
         $email = strtolower($email);
         $user = User::getUserByEmail($email);
         if (is_null($user))
         {
-            Log::debug("User with email " . $email . " does not exists", ['referenceId' => $referenceId]);
+            $debugMessage = "Cannot check activtion flow. Email parameter is missing";
+            Log::debug($debugMessage, ['referenceId' => $referenceId]);
+            $response['message'] = $debugMessage;
         }
         else
         {
@@ -144,7 +152,7 @@ class UsersController extends Controller
 
         $result = $user->id;
 
-        $response["isExists"] = false;
+        $response["isExists"] = true;
         $response["result"] = $result;
 
         return $response;
@@ -199,7 +207,12 @@ class UsersController extends Controller
                 return $response;
             }
 
-            $tokenSaved = $this->office365DBClient->saveAccessToken($accessTokenResponse, $referenceId, $userId);
+            $accessToken = $accessTokenResponse->access_token;
+            $expiresIn = intval($accessTokenResponse->expires_in);
+            $refreshToken = $accessTokenResponse->refresh_token;
+            $service = Service::Office365();
+
+            $tokenSaved = $this->tokenHelper->saveAccessToken($accessToken, $expiresIn, $refreshToken, $referenceId, $service, $userId);
             if ($tokenSaved == false) 
             {
                 Log::error('Failed to save access Token.', ['referenceId' => $referenceId, 'userId' => $userId]);

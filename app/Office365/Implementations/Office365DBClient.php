@@ -18,25 +18,19 @@ class Office365DBClient implements Office365DBClientInterface
     * Check if the Saved Office365 Subscription is Active for the User
     *
     * @param  $referenceId - Main method reference Id
-    * @param  $userId - Current Logged-In User Id
+    * @param  $user - Current Logged-In User object
     * @return boolean result - Is the User Office365 Subscription Active
     */
-    public function isSubscriptionActive($referenceId, $userId) 
+    public function isSubscriptionActive($referenceId, $user) 
     {
+        $userId = $user->id;
         $logParams = ['referenceId' => $referenceId, 'userId' => $userId];
 
         Log::debug('Initializing Office365 isSubscriptionActive method', $logParams);
 
         $result = false;
 
-        $user = $user = User::where('id', $userId)->first();
-        if (is_null($user) || empty($user)) 
-        {
-            Log::error('User does not exists', $logParams);
-            return $result;
-        }
-
-        $subscription = $user->subscriptions()->first();
+        $subscription = $user->subscriptions()->orderBy('id', 'desc')->first();
         if (is_null($subscription) || empty($subscription))
         {
             Log::error('Subscription does not exists for User', $logParams);
@@ -82,52 +76,28 @@ class Office365DBClient implements Office365DBClientInterface
         $subscriptionNotificationURL = $subscribeResult->NotificationURL;
         $subscriptionResource = $subscribeResult->Resource;
 
-        $subscription = $user->subscriptions()->where('subscription_id', $subscriptionId)->first();
-        if (is_null($subscription) || empty($subscription)) 
+        Log::debug('Saving Subscription', $logParams);
+
+        //Each subscription is unique, so far now each subscription will be saved sepeartely in the database.
+
+        try
         {
-            Log::debug('Saving Subscription', $logParams);
+            $user->subscriptions()->create([
+                'change_type' => $subscriptionChangeType,
+                'expiration_date' => $subscriptionExpirationDate,
+                'notification_url' => $subscriptionNotificationURL,
+                'resource' => $subscriptionResource,
+                'subscription_id' => $subscriptionId
+            ]);
 
-            try
-            {
-                 $user->subscriptions()->create([
-                    'change_type' => $subscriptionChangeType,
-                    'expiration_date' => $subscriptionExpirationDate,
-                    'notification_url' => $subscriptionNotificationURL,
-                    'resource' => $subscriptionResource,
-                    'subscription_id' => $subscriptionId
-                ]);
-
-                $user->save();
-            }
-
-            catch (\Exception $e)
-            {
-                $errorMessage = $e->getMessage();
-                Log::error('Could not save a new subscription for user in the database', ['errorMessage' => $errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
-                return $result;
-            }
+            $user->save();
         }
-        else if ($subscription->expiration_date < Carbon::now()) 
+
+        catch (\Exception $e)
         {
-            Log::debug('Updating Subscription', $logParams);
-
-            try
-            {
-                $user->subscriptions()->update([
-                    'change_type' => $subscriptionChangeType,
-                    'expiration_date' => $subscriptionExpirationDate,
-                    'notification_url' => $subscriptionNotificationURL,
-                    'resource' => $subscriptionResource,
-                    'subscription_id' => $subscriptionId
-                ]);
-            }
-
-            catch (\Exception $e)
-            {
-                $errorMessage = $e->getMessage();
-                Log::error('Could not update the subscription for user in the database', ['errorMessage' => $errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
-                return $result;
-            }
+            $errorMessage = $e->getMessage();
+            Log::error('Could not save a new subscription for user in the database', ['errorMessage' => $errorMessage, 'referenceId' => $referenceId, 'userId' => $userId]);
+            return $result;
         }
 
         $result = true;

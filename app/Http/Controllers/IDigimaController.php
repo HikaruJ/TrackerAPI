@@ -53,7 +53,7 @@ class IDigimaController extends Controller
         $userId = $request->userId;
         if (is_null($userId) || empty($userId)) 
         {
-            $errorMessage = "Cannot Validate Token. UserId parameter is missing";
+            $errorMessage = "Cannot Validate IDigima Token. UserId parameter is missing";
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
             $response['message'] = $errorMessage;
@@ -63,7 +63,7 @@ class IDigimaController extends Controller
         $user = User::where('id', $userId)->first();
         if (is_null($user) || empty($user)) 
         {
-            $errorMessage = "Cannot Validate Token. User does not exists for Id " . $userId;
+            $errorMessage = "Cannot Validate IDigima Token. User does not exists for Id " . $userId;
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
             $response['message'] = $errorMessage;
@@ -73,7 +73,7 @@ class IDigimaController extends Controller
         $token = $user->getIDigimaToken();
         if (is_null($token) || empty($token)) 
         {
-            $errorMessage = "Cannot Validate Token. IDigima Token does not Exists";
+            $errorMessage = "Cannot Validate IDigima Token. IDigima Token does not Exists";
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
             $response['message'] = $errorMessage;
@@ -83,7 +83,7 @@ class IDigimaController extends Controller
         $expiryDate = $token->expiry_date;
         if ($expiryDate < Carbon::now())
         {
-            $errorMessage = "Token expired for user " . $user->email;
+            $errorMessage = "IDigima Token expired for user " . $user->email;
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
             $response['message'] = $errorMessage;

@@ -189,7 +189,7 @@ class UsersController extends Controller
     {
         $response = false;
 
-        $isSubscriptionActive = $this->office365DBClient->isSubscriptionActive($referenceId, $userId);
+        $isSubscriptionActive = $this->office365DBClient->isSubscriptionActive($referenceId, $user);
         if (!$isSubscriptionActive)
         {
             $token = $user->getOffice365Token();
@@ -220,7 +220,7 @@ class UsersController extends Controller
                 return $response;
             }
             
-            $subscription = $user->subscriptions()->first();
+            $subscription = $user->subscriptions()->orderBy('id', 'desc')->first();
             if (is_null($subscription) || empty($subscription))
             {
                 Log::error('Failed to find subscription for user', ['referenceId' => $referenceId, 'userId' => $userId]);

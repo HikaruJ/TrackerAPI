@@ -373,7 +373,7 @@ class Office365Client implements Office365ClientInterface
 
         $URI = "https://outlook.office.com/api/v2.0/me/subscriptions";
 
-        $subscriptionDate = Carbon::now()->addMinutes(3)->format('Y-m-d\TH:i:s\Z');
+        $subscriptionDate = Carbon::now()->addDays(3)->format('Y-m-d\TH:i:s\Z');
         $data = array
         (
             "@odata.type" => "#Microsoft.OutlookServices.PushSubscription",

@@ -147,7 +147,7 @@ class Office365Controller extends Controller
         $userId = $request->userId;
         if (is_null($userId) || empty($userId)) 
         {
-            $errorMessage = "Cannot Validate Token. UserId parameter is missing";
+            $errorMessage = "Cannot Validate Subscription. UserId parameter is missing";
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
             $response['message'] = $errorMessage;
@@ -157,14 +157,14 @@ class Office365Controller extends Controller
         $user = User::where('id', $userId)->first();
         if (is_null($user) || empty($user)) 
         {
-            $errorMessage = "Cannot Validate Token. User does not exists for Id " . $userId;
+            $errorMessage = "Cannot Validate Subscription. User does not exists for Id " . $userId;
             Log::error($errorMessage, ['referenceId' => $referenceId]);
             
             $response['message'] = $errorMessage;
             return $response;
         }
 
-        $isSubscriptionActive = $this->office365DBClient->isSubscriptionActive($referenceId, $userId);
+        $isSubscriptionActive = $this->office365DBClient->isSubscriptionActive($referenceId, $user);
         $response['isValid'] = $isSubscriptionActive;
         return $response;
     }

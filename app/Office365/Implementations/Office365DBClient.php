@@ -14,6 +14,45 @@ class Office365DBClient implements Office365DBClientInterface
     //////////////////////////
     /* Public Functions */
 
+     /**
+    * Check if the Saved Office365 Subscription is Active for the User
+    *
+    * @param  $referenceId - Main method reference Id
+    * @param  $userId - Current Logged-In User Id
+    * @return boolean result - Is the User Office365 Subscription Active
+    */
+    public function isSubscriptionActive($referenceId, $userId) 
+    {
+        $logParams = ['referenceId' => $referenceId, 'userId' => $userId];
+
+        Log::debug('Initializing Office365 isSubscriptionActive method', $logParams);
+
+        $result = false;
+
+        $user = $user = User::where('id', $userId)->first();
+        if (is_null($user) || empty($user)) 
+        {
+            Log::error('User does not exists', $logParams);
+            return $result;
+        }
+
+        $subscription = $user->subscriptions()->first();
+        if (is_null($subscription) || empty($subscription))
+        {
+            Log::error('Subscription does not exists for User', $logParams);
+            return $result;
+        }
+
+        if ($subscription->expiration_date < Carbon::now()) 
+        {
+            Log::debug('Subscription has expired', $logParams);
+            return $result;
+        }
+
+        $result = true;
+        return $result;
+    }
+
     /**
     * Save Subscription to the Database
     *

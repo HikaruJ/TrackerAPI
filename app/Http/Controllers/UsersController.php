@@ -79,8 +79,8 @@ class UsersController extends Controller
             $checkIDigimaTokenResponse = $this->checkIDigimaToken($referenceId, $user);
             $response["idigimaTokenValid"] = $checkIDigimaTokenResponse;
 
-            $checkOffice365TokenResponse = $this->checkOffice365Token($referenceId, $user);
-            $response["outlook365TokenValid"] = $checkOffice365TokenResponse;
+            $checkOffice365SubscriptionResponse = $this->checkOffice365Subscription($referenceId, $user);
+            $response["outlook365SubscriptionValid"] = $checkOffice365SubscriptionResponse;
         }
 
         return $response;
@@ -185,20 +185,20 @@ class UsersController extends Controller
         return $response;
     }
 
-    private function checkOffice365Token($referenceId, $user)
+    private function checkOffice365Subscription($referenceId, $user)
     {
         $response = false;
 
-        $token = $user->getOffice365Token();
-        if (is_null($token) || empty($token)) 
+        $isSubscriptionActive = $this->office365DBClient->isSubscriptionActive($referenceId, $userId);
+        if (!$isSubscriptionActive)
         {
-            Log::error("Cannot Validate Token. Office365 Token does not Exists", ['referenceId' => $referenceId]);
-            return $response;
-        }
+            $token = $user->getOffice365Token();
+            if (is_null($token) || empty($token)) 
+            {
+                Log::error("Cannot Validate Token. Office365 Token does not Exists", ['referenceId' => $referenceId]);
+                return $response;
+            }
 
-        $expiryDate = $token->expiry_date;
-        if ($expiryDate < Carbon::now())
-        {
             $userId = $user->id;
             $refreshToken = $token->refresh_token;
 
@@ -219,7 +219,7 @@ class UsersController extends Controller
                 Log::error('Failed to save access Token.', ['referenceId' => $referenceId, 'userId' => $userId]);
                 return $response;
             }
-
+            
             $subscription = $user->subscriptions()->first();
             if (is_null($subscription) || empty($subscription))
             {
@@ -227,25 +227,22 @@ class UsersController extends Controller
                 return $response;
             }
 
-            if ($subscription->expiration_date < Carbon::now())
+            $subscriptionId = $subscription->subscription_id;
+            $subscriptionResult = $this->office365Client->renewSubscriptionToMailEvents($accessTokenResponse, $subscriptionId, $referenceId, $userId);
+            if (is_null($subscriptionResult) || empty($subscriptionResult))
             {
-                $subscriptionId = $subscription->subscription_id;
-                $subscriptionResult = $this->office365Client->renewSubscriptionToMailEvents($accessTokenResponse, $subscriptionId, $referenceId, $userId);
-                if (is_null($subscriptionResult) || empty($subscriptionResult))
-                {
-                    Log::error('Failed to renew subscription ' . $subscriptionId . ' for user', ['referenceId' => $referenceId, 'userId' => $userId]);
-                    return $response;
-                }
+                Log::error('Failed to renew subscription ' . $subscriptionId . ' for user', ['referenceId' => $referenceId, 'userId' => $userId]);
+                return $response;
+            }
 
-                $subscriptionSaved = $this->office365DBClient->saveSubscription($referenceId, $subscriptionResult, $userId);
-                if ($subscriptionSaved == false) 
-                {
-                    Log::error('Failed to update subscription in database', ['referenceId' => $referenceId, 'userId' => $userId]);
-                    return $response;
-                }
+            $subscriptionSaved = $this->office365DBClient->saveSubscription($referenceId, $subscriptionResult, $userId);
+            if ($subscriptionSaved == false) 
+            {
+                Log::error('Failed to update subscription in database', ['referenceId' => $referenceId, 'userId' => $userId]);
+                return $response;
             }
         }
-
+        
         $response = true;
         return $response;
     }

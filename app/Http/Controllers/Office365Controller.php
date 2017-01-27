@@ -126,17 +126,17 @@ class Office365Controller extends Controller
     }
     
     /**
-    * Check Whether the Office365 Token for the User is Valid
+    * Check Whether the Office365 Subscription for the User is Valid
     *
     * @param  Request  $request
     * @return Response
     */
-    public function isTokenValid(Request $request)
+    public function isSubscriptionValid(Request $request)
     {
         /* Unique method Identifier */
         $referenceId = Uuid::generate()->string;
 
-        Log::info('Initializing Office365 isTokenValid method', ['referenceId' => $referenceId]);
+        Log::info('Initializing Office365 isSubscriptionValid method', ['referenceId' => $referenceId]);
 
         $response = [
             'message' => '',
@@ -164,27 +164,8 @@ class Office365Controller extends Controller
             return $response;
         }
 
-        $token = $user->getOffice365Token();
-        if (is_null($token) || empty($token)) 
-        {
-            $errorMessage = "Cannot Validate Token. Office365 Token does not Exists";
-            Log::error($errorMessage, ['referenceId' => $referenceId]);
-            
-            $response['message'] = $errorMessage;
-            return $response;
-        }
-
-        $expiryDate = $token->expiry_date;
-        if ($expiryDate < Carbon::now())
-        {
-            $errorMessage = "Token expired for user " . $user->email;
-            Log::error($errorMessage, ['referenceId' => $referenceId]);
-            
-            $response['message'] = $errorMessage;
-            return $response;
-        }
-
-        $response['isValid'] = true;
+        $isSubscriptionActive = $this->office365DBClient->isSubscriptionActive($referenceId, $userId);
+        $response['isValid'] = $isSubscriptionActive;
         return $response;
     }
     //////////////////////////

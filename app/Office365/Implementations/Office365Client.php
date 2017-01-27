@@ -280,7 +280,7 @@ class Office365Client implements Office365ClientInterface
 
         $URI = "https://outlook.office.com/api/v2.0/me/subscriptions/" . $subscriptionId;
 
-        $subscriptionUpdateDate = Carbon::now()->addDays(3)->format('Y-m-d\TH:i:s\Z'); //"2017-04-23T22:46:13.8805047Z",
+        $subscriptionUpdateDate = Carbon::now()->addDays(3)->format('Y-m-d\TH:i:s\Z'); 
 
         $data = array
         (

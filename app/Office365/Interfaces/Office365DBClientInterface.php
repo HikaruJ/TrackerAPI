@@ -2,5 +2,6 @@
 
 interface Office365DBClientInterface
 {
+    public function isSubscriptionActive($referenceId, $userId);
     public function saveSubscription($referenceId, $subscribeResult, $userId);
 }

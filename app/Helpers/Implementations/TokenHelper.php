@@ -43,8 +43,6 @@ class TokenHelper implements TokenHelperInterface
             return $result;
         }
 
-        $expireInSeconds = $expiresIn / 1000;
-
         if (is_null($refreshToken) || empty($refreshToken)) 
         {
             Log::debug('refreshToken parameter is not defined', $logParams);
@@ -72,7 +70,7 @@ class TokenHelper implements TokenHelperInterface
             {
                 $user->tokens()->create([
                     'access_token' => $accessToken,
-                    'expiry_date' => Carbon::now()->addSeconds($expireInSeconds),
+                    'expiry_date' => Carbon::now()->addSeconds($expiresIn),
                     'refresh_token' => $refreshToken,
                     'service_id' => $service->id
                 ]);
@@ -95,7 +93,7 @@ class TokenHelper implements TokenHelperInterface
             {
                 $token->update([
                     'access_token' => $accessToken,
-                    'expiry_date' => Carbon::now()->addSeconds($expireInSeconds),
+                    'expiry_date' => Carbon::now()->addSeconds($expiresIn),
                     'refresh_token' => $refreshToken,
                     'service_id' => $service->id
                 ]);

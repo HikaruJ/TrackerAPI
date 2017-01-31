@@ -30,7 +30,7 @@ Route::group(array('prefix' => 'office365'), function()
     Route::get('authenticate', 'Office365Controller@authenticate');
 
     /* POST */
-    Route::post('isSubscriptionValid', 'Office365Controller@isSubscriptionValid');
+    Route::post('isTokenValid', 'Office365Controller@isTokenValid');
 });
 
 /* Users API */

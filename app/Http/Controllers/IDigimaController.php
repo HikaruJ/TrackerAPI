@@ -122,7 +122,7 @@ class IDigimaController extends Controller
          /* Logging parameters */
         $logParams = ['referenceId' => $referenceId, 'userId' => $userId];
         
-        $expiresIn = 32000;
+        $expiresIn = 3600;
         $refreshToken = null;
         $service = Service::IDigima();
 
@@ -131,6 +131,15 @@ class IDigimaController extends Controller
         {
             return view('idigima.failureAuth', ['referenceId' => $referenceId]);
         }
+
+        $data = [
+            'event' => 'SavingIDigimaToken',
+            'data' => [
+                'username' => 'test'
+            ]
+        ];
+
+        Redis::publish('tracker-channel', json_encode($data));
 
         return view('idigima.successAuth');
     }

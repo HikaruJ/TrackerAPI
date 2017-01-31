@@ -79,8 +79,8 @@ class UsersController extends Controller
             $checkIDigimaTokenResponse = $this->checkIDigimaToken($referenceId, $user);
             $response["idigimaTokenValid"] = $checkIDigimaTokenResponse;
 
-            $checkOffice365SubscriptionResponse = $this->checkOffice365Subscription($referenceId, $user);
-            $response["outlook365SubscriptionValid"] = $checkOffice365SubscriptionResponse;
+            $checkOffice365TokenResponse = $this->checkOffice365Token($referenceId, $user);
+            $response["outlook365TokenValid"] = $checkOffice365TokenResponse;
         }
 
         return $response;
@@ -185,48 +185,55 @@ class UsersController extends Controller
         return $response;
     }
 
-    private function checkOffice365Subscription($referenceId, $user)
+    private function checkOffice365Token($referenceId, $user)
     {
         $response = false;
 
-        $isSubscriptionActive = $this->office365DBClient->isSubscriptionActive($referenceId, $user);
-        if (!$isSubscriptionActive)
+        $token = $user->getOffice365Token();
+        if (is_null($token) || empty($token)) 
         {
-            $token = $user->getOffice365Token();
-            if (is_null($token) || empty($token)) 
-            {
-                Log::error("Cannot Validate Token. Office365 Token does not Exists", ['referenceId' => $referenceId]);
-                return $response;
-            }
+            Log::error("Cannot Validate Token. Office365 Token does not Exists", ['referenceId' => $referenceId]);
+            return $response;
+        }
 
-            $userId = $user->id;
-            $refreshToken = $token->refresh_token;
+        $expiryDate = $token->expiry_date;
+        if ($expiryDate < Carbon::now())
+        {
+            Log::error("Token expired for user " . $user->email, ['referenceId' => $referenceId]);
+            return $response;
+        }
 
-            $accessTokenResponse = $this->office365Client->refreshAccessToken($refreshToken, $referenceId);
-            if (is_null($accessTokenResponse) || empty($accessTokenResponse))
-            {
-                return $response;
-            }
+        $userId = $user->id;
+        $refreshToken = $token->refresh_token;
 
-            $accessToken = $accessTokenResponse->access_token;
-            $expiresIn = intval($accessTokenResponse->expires_in);
-            $refreshToken = $accessTokenResponse->refresh_token;
-            $service = Service::Office365();
+        $accessTokenResponse = $this->office365Client->refreshAccessToken($refreshToken, $referenceId);
+        if (is_null($accessTokenResponse) || empty($accessTokenResponse))
+        {
+            return $response;
+        }
 
-            $tokenSaved = $this->tokenHelper->saveAccessToken($accessToken, $expiresIn, $refreshToken, $referenceId, $service, $userId);
-            if ($tokenSaved == false) 
-            {
-                Log::error('Failed to save access Token.', ['referenceId' => $referenceId, 'userId' => $userId]);
-                return $response;
-            }
-            
-            $subscription = $user->subscriptions()->orderBy('id', 'desc')->first();
-            if (is_null($subscription) || empty($subscription))
-            {
-                Log::error('Failed to find subscription for user', ['referenceId' => $referenceId, 'userId' => $userId]);
-                return $response;
-            }
+        $accessToken = $accessTokenResponse->access_token;
+        $expiresIn = intval($accessTokenResponse->expires_in);
+        $refreshToken = $accessTokenResponse->refresh_token;
+        $service = Service::Office365();
 
+        $tokenSaved = $this->tokenHelper->saveAccessToken($accessToken, $expiresIn, $refreshToken, $referenceId, $service, $userId);
+        if ($tokenSaved == false) 
+        {
+            Log::error('Failed to save access Token.', ['referenceId' => $referenceId, 'userId' => $userId]);
+            return $response;
+        }
+        
+        $subscription = $user->subscriptions()->orderBy('id', 'desc')->first();
+        if (is_null($subscription) || empty($subscription))
+        {
+            Log::error('Failed to find subscription for user', ['referenceId' => $referenceId, 'userId' => $userId]);
+            return $response;
+        }
+
+        $isSubscriptionActive = $this->office365DBClient->isSubscriptionActive($referenceId, $subscription, $user);
+        if (!$isSubscriptionActive) 
+        {
             $subscriptionId = $subscription->subscription_id;
             $subscriptionResult = $this->office365Client->renewSubscriptionToMailEvents($accessTokenResponse, $subscriptionId, $referenceId, $userId);
             if (is_null($subscriptionResult) || empty($subscriptionResult))
@@ -242,7 +249,7 @@ class UsersController extends Controller
                 return $response;
             }
         }
-        
+
         $response = true;
         return $response;
     }

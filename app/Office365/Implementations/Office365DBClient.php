@@ -18,10 +18,11 @@ class Office365DBClient implements Office365DBClientInterface
     * Check if the Saved Office365 Subscription is Active for the User
     *
     * @param  $referenceId - Main method reference Id
+    * @param  $subscription - Current Subscription
     * @param  $user - Current Logged-In User object
     * @return boolean result - Is the User Office365 Subscription Active
     */
-    public function isSubscriptionActive($referenceId, $user) 
+    public function isSubscriptionActive($referenceId, $subscription, $user) 
     {
         $userId = $user->id;
         $logParams = ['referenceId' => $referenceId, 'userId' => $userId];
@@ -30,7 +31,6 @@ class Office365DBClient implements Office365DBClientInterface
 
         $result = false;
 
-        $subscription = $user->subscriptions()->orderBy('id', 'desc')->first();
         if (is_null($subscription) || empty($subscription))
         {
             Log::error('Subscription does not exists for User', $logParams);

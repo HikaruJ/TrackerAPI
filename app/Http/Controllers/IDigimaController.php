@@ -132,15 +132,6 @@ class IDigimaController extends Controller
             return view('idigima.failureAuth', ['referenceId' => $referenceId]);
         }
 
-        $data = [
-            'event' => 'SavingIDigimaToken',
-            'data' => [
-                'username' => 'test'
-            ]
-        ];
-
-        Redis::publish('tracker-channel', json_encode($data));
-
         return view('idigima.successAuth');
     }
     //////////////////////////
